@@ -25,6 +25,8 @@ export const Route = createFileRoute("/habits/")({
   head: () => ({
     meta: [
       { title: "My Habits — Streakly" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Create, edit, archive and bulk-add habits with AI." },
       { property: "og:title", content: "My Habits — Streakly" },
       { property: "og:description", content: "Create, edit, archive and bulk-add habits with AI." },

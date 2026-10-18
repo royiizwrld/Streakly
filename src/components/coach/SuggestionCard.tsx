@@ -5,6 +5,7 @@ import { useHabits } from "@/context/HabitsContext";
 import type { Habit } from "@/lib/habits/types";
 import { describeFrequency } from "@/lib/habits/logic";
 import { Button } from "@/components/ui/button";
+import { readStored, writeStored } from "@/lib/browser-storage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +32,8 @@ const APPLIED_KEY = "ht-coach-applied";
 
 function readApplied(): string[] {
   try {
-    return JSON.parse(localStorage.getItem(APPLIED_KEY) ?? "[]");
+    const saved: unknown = JSON.parse(readStored(APPLIED_KEY) ?? "[]");
+    return Array.isArray(saved) ? saved.filter((x): x is string => typeof x === "string") : [];
   } catch {
     return [];
   }
@@ -45,7 +47,7 @@ export function SuggestionCard({ id, change }: { id: string; change: ProposedCha
 
   if (!habit) return null;
 
-  const patch = (): Partial<Habit> | null => {
+  const patch = (confirmed = false): Partial<Habit> | null => {
     switch (change.action) {
       case "set_daily":
         return { frequency: { type: "daily" } };
@@ -56,9 +58,10 @@ export function SuggestionCard({ id, change }: { id: string; change: ProposedCha
       case "rename":
         return change.newName?.trim() ? { name: change.newName.trim().slice(0, 80) } : null;
       case "move_routine": {
-        if (!change.routine) return null;
-        const r = data.routines.find((x) => x.name.toLowerCase() === change.routine!.toLowerCase());
-        return { routineId: (r ?? addRoutine(change.routine, "🕐")).id };
+        const routine = change.routine?.trim();
+        if (!routine) return null;
+        const r = data.routines.find((x) => x.name.toLowerCase() === routine.toLowerCase());
+        return { routineId: r?.id ?? (confirmed ? addRoutine(routine, "🕐").id : null) };
       }
     }
   };
@@ -72,10 +75,10 @@ export function SuggestionCard({ id, change }: { id: string; change: ProposedCha
   };
 
   const apply = () => {
-    const p = patch();
+    const p = patch(true);
     if (!p) return toast.error("This suggestion can't be applied.");
     updateHabit(habit.id, p);
-    localStorage.setItem(APPLIED_KEY, JSON.stringify([...readApplied(), id].slice(-200)));
+    writeStored(APPLIED_KEY, JSON.stringify([...readApplied(), id].slice(-200)));
     setApplied(true);
     toast.success("Change applied");
   };

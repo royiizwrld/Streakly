@@ -10,6 +10,8 @@ export const Route = createFileRoute("/stats")({
   head: () => ({
     meta: [
       { title: "Stats — Streakly" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Weekly completion trends, category rates, best days and streak leaderboard." },
       { property: "og:title", content: "Stats — Streakly" },
       { property: "og:description", content: "Weekly completion trends, category rates, best days and streak leaderboard." },

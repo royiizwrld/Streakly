@@ -13,6 +13,7 @@ import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea 
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Tool, ToolContent, ToolHeader, ToolInput } from "@/components/ai-elements/tool";
 import { SuggestionCard, type ProposedChange } from "./SuggestionCard";
+import { readStored, writeStored, removeStored } from "@/lib/browser-storage";
 
 const CHAT_KEY = "ht-coach-chat";
 const STARTERS = [
@@ -88,8 +89,8 @@ function CoachChat({ onClose }: { onClose: () => void }) {
     if (restored.current) return;
     restored.current = true;
     try {
-      const saved = JSON.parse(localStorage.getItem(CHAT_KEY) ?? "[]") as UIMessage[];
-      if (Array.isArray(saved) && saved.length) setMessages(saved);
+      const saved = JSON.parse(readStored(CHAT_KEY) ?? "[]") as UIMessage[];
+      if (Array.isArray(saved) && saved.length && saved.every((m) => m && typeof m.id === "string" && ["user", "assistant", "system"].includes(m.role) && Array.isArray(m.parts))) setMessages(saved);
     } catch {
       /* ignore */
     }
@@ -97,7 +98,7 @@ function CoachChat({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (!restored.current || status === "streaming" || status === "submitted") return;
-    localStorage.setItem(CHAT_KEY, JSON.stringify(messages.slice(-40)));
+    writeStored(CHAT_KEY, JSON.stringify(messages.slice(-40)));
   }, [messages, status]);
 
   useEffect(() => {
@@ -133,7 +134,7 @@ function CoachChat({ onClose }: { onClose: () => void }) {
           disabled={!messages.length || busy}
           onClick={() => {
             setMessages([]);
-            localStorage.removeItem(CHAT_KEY);
+            removeStored(CHAT_KEY);
           }}
         >
           <Trash2 />

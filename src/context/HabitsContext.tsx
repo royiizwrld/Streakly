@@ -3,8 +3,8 @@ import type { Category, Habit, HabitData, Routine, StreakInfo } from "@/lib/habi
 import { emptyData, sampleData, uid } from "@/lib/habits/seed";
 import { computeStreak, completionRate, dayProgress, isDone, isDue } from "@/lib/habits/logic";
 import { todayKey } from "@/lib/habits/dates";
-
-const STORAGE_KEY = "habit-tracker-data-v1";
+import { readStored, writeStored } from "@/lib/browser-storage";
+import { HABITS_STORAGE_KEY, loadHabitData, parseHabitData } from "@/lib/habits/storage";
 
 interface HabitsContextValue {
   ready: boolean;
@@ -37,30 +37,20 @@ interface HabitsContextValue {
 
 const Ctx = createContext<HabitsContextValue | null>(null);
 
-function load(): HabitData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as HabitData;
-      if (parsed?.version === 1) return parsed;
-    }
-  } catch {
-    /* ignore corrupt storage */
-  }
-  return sampleData();
-}
-
 export function HabitsProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<HabitData>(emptyData);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setData(load());
+    setData(loadHabitData());
     setReady(true);
   }, []);
 
   useEffect(() => {
-    if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (!ready) return;
+    const saved = readStored(HABITS_STORAGE_KEY);
+    if (saved !== null && !parseHabitData(saved)) return;
+    writeStored(HABITS_STORAGE_KEY, JSON.stringify(data));
   }, [data, ready]);
 
   const addHabit = useCallback((h: Omit<Habit, "id" | "createdAt" | "archived">) => {

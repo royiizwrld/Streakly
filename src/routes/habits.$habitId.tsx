@@ -12,6 +12,8 @@ export const Route = createFileRoute("/habits/$habitId")({
   head: () => ({
     meta: [
       { title: "Habit details — Streakly" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Streaks, 30-day completion rate, calendar and notes for one habit." },
       { property: "og:title", content: "Habit details — Streakly" },
       { property: "og:description", content: "Streaks, 30-day completion rate, calendar and notes for one habit." },

@@ -15,6 +15,8 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Today — Streakly Habit Tracker" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Check off today's habits, track routines and keep your streaks alive." },
       { property: "og:title", content: "Today — Streakly Habit Tracker" },
       { property: "og:description", content: "Check off today's habits, track routines and keep your streaks alive." },
@@ -88,7 +90,7 @@ function Today() {
     for (const x of visible) {
       const k = view === "routine" ? (x.routineId ?? "none") : x.categoryId;
       if (!map.has(k)) map.set(k, { label: view === "routine" ? "🕐 Anytime" : "Other", items: [] });
-      map.get(k)!.items.push(x);
+      map.get(k)?.items.push(x);
     }
     return [...map.entries()].filter(([, g]) => g.items.length);
   }, [visible, view, h.data.routines, h.data.categories]);

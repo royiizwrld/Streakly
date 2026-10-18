@@ -7,11 +7,14 @@ import { useHabits } from "@/context/HabitsContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { removeStored } from "@/lib/browser-storage";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Streakly" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Themes, dark mode, categories, routines and data settings." },
       { property: "og:title", content: "Settings — Streakly" },
       { property: "og:description", content: "Themes, dark mode, categories, routines and data settings." },
@@ -164,7 +167,7 @@ function SettingsPage() {
             onClick={() => {
               if (confirm("Delete all habits and history? This can't be undone.")) {
                 h.resetAll();
-                localStorage.removeItem("ht-coach-chat");
+                removeStored("ht-coach-chat");
                 toast.success("All data reset");
               }
             }}
