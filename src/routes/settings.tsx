@@ -74,7 +74,12 @@ function SettingsPage() {
                 palette === p.id ? "border-primary ring-2 ring-ring" : "border-border",
               )}
             >
-              <span className="grid size-7 place-items-center rounded-full bg-hero text-primary-foreground">
+              <span
+                className="grid size-7 place-items-center rounded-full text-white"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.66 ${p.chroma} ${p.hue}), oklch(0.6 ${p.chroma} ${p.hue + 35}))`,
+                }}
+              >
                 {palette === p.id && <Check className="size-4" />}
               </span>
               {p.name}
