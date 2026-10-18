@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Browser persistence must use the guarded storage helpers so restricted storage cannot disable interaction.
+- Pre-optimize dependencies from every route and the Start entry to avoid client chunk invalidation during hydration.

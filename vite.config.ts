@@ -7,6 +7,13 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    optimizeDeps: {
+      // Crawl every page before serving the client, not just the HTML entry.
+      // Late discovery invalidates shared chunks while hydration is importing them.
+      entries: ["src/routes/**/*.tsx", "src/start.ts"],
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
