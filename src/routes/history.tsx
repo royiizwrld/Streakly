@@ -10,6 +10,8 @@ export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
       { title: "History — Streakly" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Monthly heatmap of your habit completion history." },
       { property: "og:title", content: "History — Streakly" },
       { property: "og:description", content: "Monthly heatmap of your habit completion history." },

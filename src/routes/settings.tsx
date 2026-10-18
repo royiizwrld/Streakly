@@ -13,6 +13,8 @@ export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Streakly" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Themes, dark mode, categories, routines and data settings." },
       { property: "og:title", content: "Settings — Streakly" },
       { property: "og:description", content: "Themes, dark mode, categories, routines and data settings." },

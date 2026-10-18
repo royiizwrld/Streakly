@@ -15,6 +15,8 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Today — Streakly Habit Tracker" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Check off today's habits, track routines and keep your streaks alive." },
       { property: "og:title", content: "Today — Streakly Habit Tracker" },
       { property: "og:description", content: "Check off today's habits, track routines and keep your streaks alive." },
