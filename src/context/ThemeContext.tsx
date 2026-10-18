@@ -3,16 +3,16 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 export type Mode = "light" | "dark" | "system";
 
 export const PALETTES = [
-  { id: "sunrise", name: "Sunrise", hue: 35 },
-  { id: "ocean", name: "Ocean", hue: 235 },
-  { id: "forest", name: "Forest", hue: 150 },
-  { id: "citrus", name: "Citrus", hue: 95 },
-  { id: "rose", name: "Rose", hue: 10 },
-  { id: "lagoon", name: "Lagoon", hue: 195 },
-  { id: "plum", name: "Plum", hue: 320 },
-  { id: "ember", name: "Ember", hue: 55 },
-  { id: "glacier", name: "Glacier", hue: 260 },
-  { id: "graphite", name: "Graphite", hue: 250 },
+  { id: "sunrise", name: "Sunrise", hue: 35, chroma: 0.16 },
+  { id: "ocean", name: "Ocean", hue: 235, chroma: 0.15 },
+  { id: "forest", name: "Forest", hue: 150, chroma: 0.13 },
+  { id: "citrus", name: "Citrus", hue: 110, chroma: 0.16 },
+  { id: "rose", name: "Rose", hue: 10, chroma: 0.17 },
+  { id: "lagoon", name: "Lagoon", hue: 195, chroma: 0.12 },
+  { id: "plum", name: "Plum", hue: 320, chroma: 0.15 },
+  { id: "ember", name: "Ember", hue: 55, chroma: 0.17 },
+  { id: "glacier", name: "Glacier", hue: 260, chroma: 0.11 },
+  { id: "graphite", name: "Graphite", hue: 250, chroma: 0.02 },
 ] as const;
 export type PaletteId = (typeof PALETTES)[number]["id"];
 
