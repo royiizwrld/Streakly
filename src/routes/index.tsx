@@ -88,7 +88,7 @@ function Today() {
     for (const x of visible) {
       const k = view === "routine" ? (x.routineId ?? "none") : x.categoryId;
       if (!map.has(k)) map.set(k, { label: view === "routine" ? "🕐 Anytime" : "Other", items: [] });
-      map.get(k)!.items.push(x);
+      map.get(k)?.items.push(x);
     }
     return [...map.entries()].filter(([, g]) => g.items.length);
   }, [visible, view, h.data.routines, h.data.categories]);
