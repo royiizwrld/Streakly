@@ -16,7 +16,7 @@ it("creates a suggested routine only after confirmation", () => {
   expect(mocks.addRoutine).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Apply" }));
   expect(mocks.addRoutine).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Confirm", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: /^Confirm$/ }));
   expect(mocks.addRoutine).toHaveBeenCalledWith("Evening", "🕐");
   expect(mocks.updateHabit).toHaveBeenCalledWith("water", { routineId: "evening" });
 });
