@@ -7,6 +7,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { removeStored } from "@/lib/browser-storage";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -164,7 +165,7 @@ function SettingsPage() {
             onClick={() => {
               if (confirm("Delete all habits and history? This can't be undone.")) {
                 h.resetAll();
-                localStorage.removeItem("ht-coach-chat");
+                removeStored("ht-coach-chat");
                 toast.success("All data reset");
               }
             }}

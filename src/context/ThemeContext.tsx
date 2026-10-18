@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { readStored, writeStored } from "@/lib/browser-storage";
 
 export type Mode = "light" | "dark" | "system";
 
@@ -35,8 +36,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [systemDark, setSystemDark] = useState(false);
 
   useEffect(() => {
-    setModeState((localStorage.getItem("ht-mode") as Mode) || "system");
-    setPaletteState((localStorage.getItem("ht-palette") as PaletteId) || "sunrise");
+    const savedMode = readStored("ht-mode");
+    const savedPalette = readStored("ht-palette");
+    setModeState(savedMode === "dark" || savedMode === "light" ? savedMode : "system");
+    setPaletteState(PALETTES.find((p) => p.id === savedPalette)?.id ?? "sunrise");
     const mq = matchMedia("(prefers-color-scheme: dark)");
     setSystemDark(mq.matches);
     const on = (e: MediaQueryListEvent) => setSystemDark(e.matches);
@@ -52,12 +55,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [resolved, palette]);
 
   const setMode = (m: Mode) => {
-    localStorage.setItem("ht-mode", m);
     setModeState(m);
+    writeStored("ht-mode", m);
   };
   const setPalette = (p: PaletteId) => {
-    localStorage.setItem("ht-palette", p);
     setPaletteState(p);
+    writeStored("ht-palette", p);
   };
 
   return <Ctx.Provider value={{ mode, setMode, palette, setPalette, resolved }}>{children}</Ctx.Provider>;
