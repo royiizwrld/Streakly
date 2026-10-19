@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeStreak, isDue } from "./logic";
+import { computeStreak, isDue, weekRate } from "./logic";
 import type { Habit, Logs } from "./types";
 
 const base: Omit<Habit, "frequency"> = {
@@ -43,5 +43,17 @@ describe("habit logic", () => {
     const logs = logsFor(["2026-10-12", "2026-10-13"]);
     expect(isDue(h, logs, "2026-10-14")).toBe(false);
     expect(isDue(h, logsFor(["2026-10-12"]), "2026-10-14")).toBe(true);
+  });
+
+  it("an in-progress week does not count unfinished weekly targets as missed", () => {
+    const h: Habit = { ...base, frequency: { type: "weekly", times: 3 } };
+    // Week of Mon 2026-10-12, viewed on Tuesday with one check-in
+    expect(weekRate([h], logsFor(["2026-10-12"]), "2026-10-12", "2026-10-13")).toBe(1);
+    expect(weekRate([h], logsFor([]), "2026-10-12", "2026-10-13")).toBeNull();
+  });
+
+  it("a finished week counts the full weekly target", () => {
+    const h: Habit = { ...base, frequency: { type: "weekly", times: 3 } };
+    expect(weekRate([h], logsFor(["2026-10-12"]), "2026-10-12", "2026-10-20")).toBeCloseTo(1 / 3);
   });
 });
