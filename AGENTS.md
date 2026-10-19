@@ -11,3 +11,4 @@
 
 - Browser persistence must use the guarded storage helpers so restricted storage cannot disable interaction.
 - Pre-optimize dependencies from every route and the Start entry to avoid client chunk invalidation during hydration.
+- Load heavy, on-demand features (AI coach chat, markdown renderer) lazily, never from the always-mounted app shell, so every page stays fast to become interactive in the preview.
