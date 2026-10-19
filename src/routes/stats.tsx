@@ -102,7 +102,7 @@ function StatsPage() {
             <ResponsiveContainer>
               <BarChart data={stats.byCat} margin={{ left: -20 }}>
                 <CartesianGrid stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} />
+                <XAxis dataKey="name" interval={0} angle={-30} textAnchor="end" height={56} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 100]} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" />
                 <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--accent)" }} formatter={(v) => [`${v}%`, "Completion"]} />
                 <Bar dataKey="rate" fill="var(--chart-1)" radius={[8, 8, 0, 0]} />

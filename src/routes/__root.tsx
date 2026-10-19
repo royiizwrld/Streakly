@@ -95,7 +95,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap",
       },
     ],
-    scripts: [{ children: themeBootScript }],
+    scripts: [
+      { children: themeBootScript },
+      {
+        // If a page chunk fails to download (e.g. preview restarted), reload once instead of freezing.
+        children: `window.addEventListener('vite:preloadError',function(){try{if(sessionStorage.getItem('ht-reloaded'))return;sessionStorage.setItem('ht-reloaded','1')}catch(e){}location.reload()});`,
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
