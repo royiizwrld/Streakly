@@ -137,8 +137,11 @@ export function weekRate(habits: Habit[], logs: Logs, start: string, today = tod
   for (const h of habits) {
     if (h.frequency.type === "weekly") {
       if (addDays(start, 6) < h.createdAt || start > today) continue;
-      due += h.frequency.times;
-      done += Math.min(h.frequency.times, weekCount(logs, h.id, start));
+      const count = Math.min(h.frequency.times, weekCount(logs, h.id, start));
+      // A week still in progress can't be "missed" yet; only count check-ins so far.
+      const inProgress = today < addDays(start, 6);
+      due += inProgress ? count : h.frequency.times;
+      done += count;
       continue;
     }
     for (let i = 0; i < 7; i++) {
