@@ -1,0 +1,211 @@
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { useEffect, useRef, useState } from "react";
+import { Sprout, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
+import { useHabits } from "@/context/HabitsContext";
+import { buildCoachSummary } from "@/lib/habits/summary";
+import { SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Tool, ToolContent, ToolHeader, ToolInput } from "@/components/ai-elements/tool";
+import { SuggestionCard, type ProposedChange } from "./SuggestionCard";
+import { readStored, writeStored, removeStored } from "@/lib/browser-storage";
+
+const CHAT_KEY = "ht-coach-chat";
+const STARTERS = [
+  "Which habits am I struggling with?",
+  "Why do I keep missing my gym days?",
+  "How was my week?",
+  "Which habit should I focus on first?",
+  "Am I too ambitious with my list?",
+  "Give me a weekly review",
+];
+
+export function CoachMark({ className = "size-9" }: { className?: string }) {
+  return (
+    <span className={`grid shrink-0 place-items-center rounded-2xl bg-hero text-primary-foreground ${className}`}>
+      <Sprout className="size-1/2" strokeWidth={2.4} />
+    </span>
+  );
+}
+
+export default function CoachChat({ onClose }: { onClose: () => void }) {
+  const { data } = useHabits();
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const [input, setInput] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const { messages, sendMessage, status, stop, setMessages, error } = useChat({
+    id: "coach",
+    transport: new DefaultChatTransport({
+      api: "/api/coach",
+      prepareSendMessagesRequest: ({ messages }) => ({
+        body: { messages, summary: buildCoachSummary(dataRef.current) },
+      }),
+    }),
+    onError: (err) => {
+      let msg = err.message;
+      try {
+        msg = JSON.parse(err.message).error ?? msg;
+      } catch {
+        /* plain text */
+      }
+      toast.error(msg || "The coach couldn't respond. Please try again.");
+    },
+  });
+
+  // Restore single conversation from this browser once.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    try {
+      const saved = JSON.parse(readStored(CHAT_KEY) ?? "[]") as UIMessage[];
+      if (Array.isArray(saved) && saved.length && saved.every((m) => m && typeof m.id === "string" && ["user", "assistant", "system"].includes(m.role) && Array.isArray(m.parts))) setMessages(saved);
+    } catch {
+      /* ignore */
+    }
+  }, [setMessages]);
+
+  useEffect(() => {
+    if (!restored.current || status === "streaming" || status === "submitted") return;
+    writeStored(CHAT_KEY, JSON.stringify(messages.slice(-40)));
+  }, [messages, status]);
+
+  useEffect(() => {
+    if (status === "ready" || status === "error") textareaRef.current?.focus();
+  }, [status]);
+
+  const busy = status === "submitted" || status === "streaming";
+  const send = (text: string) => {
+    const t = text.trim();
+    if (!t || busy) return;
+    sendMessage({ text: t });
+    setInput("");
+  };
+
+  const last = messages[messages.length - 1];
+  const showTyping =
+    status === "submitted" || (status === "streaming" && last?.role === "assistant" && !last.parts.some((p) => p.type === "text" && p.text));
+
+  return (
+    <>
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+        <CoachMark />
+        <div className="flex-1">
+          <SheetTitle className="font-display text-base font-bold">Sprout · Habit coach</SheetTitle>
+          <SheetDescription className="text-xs">Looks at your check-ins and suggests small tweaks.</SheetDescription>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label="Clear chat"
+          title="Clear chat"
+          disabled={!messages.length || busy}
+          onClick={() => {
+            setMessages([]);
+            removeStored(CHAT_KEY);
+          }}
+        >
+          <Trash2 />
+        </Button>
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Close coach" onClick={onClose}>
+          <X />
+        </Button>
+      </div>
+
+      <Conversation className="flex-1">
+        <ConversationContent className="gap-5 px-4">
+          {messages.length === 0 && (
+            <div className="space-y-4 py-6 text-center">
+              <CoachMark className="mx-auto size-16" />
+              <div>
+                <p className="font-display text-lg font-bold">Hi, I'm Sprout 🌱</p>
+                <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
+                  Ask me about your habits — I'll look at your real check-in history, spot patterns and suggest small changes.
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {STARTERS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    className="rounded-full border border-border bg-card px-3 py-1.5 text-left text-sm hover:border-primary hover:bg-accent"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.map((m) => (
+            <Message key={m.id} from={m.role}>
+              <MessageContent
+                className={
+                  m.role === "user"
+                    ? "group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground"
+                    : "w-full bg-transparent p-0"
+                }
+              >
+                {m.parts.map((part, i) => {
+                  if (part.type === "text")
+                    return m.role === "user" ? <p key={i}>{part.text}</p> : <MessageResponse key={i}>{part.text}</MessageResponse>;
+                  if (part.type === "tool-propose_change") {
+                    return (
+                      <div key={i} className="space-y-2">
+                        {part.state !== "input-streaming" && part.input ? (
+                          <SuggestionCard id={part.toolCallId} change={part.input as ProposedChange} />
+                        ) : null}
+                        <Tool defaultOpen={false} className="mb-0">
+                          <ToolHeader type={part.type} state={part.state} title="Suggested change" />
+                          <ToolContent>
+                            <ToolInput input={part.input} />
+                          </ToolContent>
+                        </Tool>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </MessageContent>
+            </Message>
+          ))}
+          {showTyping && (
+            <div className="flex items-center gap-2 text-sm">
+              <CoachMark className="size-7" />
+              <Shimmer>Looking at your check-ins…</Shimmer>
+            </div>
+          )}
+          {error && status === "error" && (
+            <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
+              The coach couldn't answer that one. Please try again in a moment.
+            </p>
+          )}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
+
+      <div className="border-t border-border p-3">
+        <PromptInput onSubmit={(msg) => send(msg.text ?? input)}>
+          <PromptInputTextarea
+            ref={textareaRef}
+            autoFocus
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about your habits…"
+          />
+          <PromptInputFooter className="justify-end">
+            <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !input.trim()} />
+          </PromptInputFooter>
+        </PromptInput>
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">General habit guidance, not medical advice.</p>
+      </div>
+    </>
+  );
+}
