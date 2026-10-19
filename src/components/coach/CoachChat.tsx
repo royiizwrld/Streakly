@@ -11,7 +11,6 @@ import { Conversation, ConversationContent, ConversationScrollButton } from "@/c
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { Tool, ToolContent, ToolHeader, ToolInput } from "@/components/ai-elements/tool";
 import { SuggestionCard, type ProposedChange } from "./SuggestionCard";
 import { readStored, writeStored, removeStored } from "@/lib/browser-storage";
 
@@ -162,12 +161,6 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
                         {part.state !== "input-streaming" && part.input ? (
                           <SuggestionCard id={part.toolCallId} change={part.input as ProposedChange} />
                         ) : null}
-                        <Tool defaultOpen={false} className="mb-0">
-                          <ToolHeader type={part.type} state={part.state} title="Suggested change" />
-                          <ToolContent>
-                            <ToolInput input={part.input} />
-                          </ToolContent>
-                        </Tool>
                       </div>
                     );
                   }
