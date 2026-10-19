@@ -37,7 +37,7 @@ export function CoachPanel() {
         Coach
       </button>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md [&>button:last-child]:hidden">
+        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md [&>button:first-child]:hidden">
           {open && (
             <Suspense fallback={<CoachLoading />}>
               <CoachChat onClose={() => setOpen(false)} />
