@@ -106,7 +106,7 @@ function HabitsPage() {
                   <p className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-0.5">
                       <Flame className="size-3.5 text-primary" />
-                      {s.current} {s.unit}
+                      {s.current} {s.current === 1 ? s.unit.replace(/s$/, "") : s.unit}
                     </span>
                     <span>{rate == null ? "—" : `${Math.round(rate * 100)}%`} last 30d</span>
                   </p>
