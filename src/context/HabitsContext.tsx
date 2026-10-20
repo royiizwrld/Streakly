@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Category, Habit, HabitData, Routine, StreakInfo } from "@/lib/habits/types";
+import type { Category, Goal, Habit, HabitData, Routine, StreakInfo } from "@/lib/habits/types";
 import { emptyData, sampleData, uid } from "@/lib/habits/seed";
 import { computeStreak, completionRate, dayProgress, isDone, isDue } from "@/lib/habits/logic";
 import { todayKey } from "@/lib/habits/dates";
@@ -24,6 +24,9 @@ interface HabitsContextValue {
   clearSample: () => void;
   loadSample: () => void;
   resetAll: () => void;
+  addGoal: (goal: Omit<Goal, "id">) => void;
+  updateGoal: (id: string, goal: Omit<Goal, "id">) => void;
+  deleteGoal: (id: string) => void;
   // derived helpers
   isDone: (habitId: string, key: string) => boolean;
   isDue: (habit: Habit, key: string) => boolean;
@@ -72,7 +75,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     setData((d) => {
       const logs = { ...d.logs };
       delete logs[id];
-      return { ...d, habits: d.habits.filter((h) => h.id !== id), logs };
+      return { ...d, habits: d.habits.filter((h) => h.id !== id), logs, goals: d.goals.filter((g) => g.habitId !== id) };
     });
   }, []);
 
@@ -130,7 +133,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     setData((d) => {
       const ids = new Set(d.habits.filter((h) => h.sample).map((h) => h.id));
       const logs = Object.fromEntries(Object.entries(d.logs).filter(([k]) => !ids.has(k)));
-      return { ...d, habits: d.habits.filter((h) => !h.sample), logs, sampleLoaded: false, celebrated: [] };
+      return { ...d, habits: d.habits.filter((h) => !h.sample), logs, goals: d.goals.filter((g) => !ids.has(g.habitId)), sampleLoaded: false, celebrated: [] };
     });
   }, []);
 
@@ -142,6 +145,16 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetAll = useCallback(() => setData({ ...emptyData() }), []);
+
+  const addGoal = useCallback((goal: Omit<Goal, "id">) => {
+    setData((d) => ({ ...d, goals: [...d.goals, { ...goal, id: uid() }] }));
+  }, []);
+  const updateGoal = useCallback((id: string, goal: Omit<Goal, "id">) => {
+    setData((d) => ({ ...d, goals: d.goals.map((g) => g.id === id ? { ...goal, id } : g) }));
+  }, []);
+  const deleteGoal = useCallback((id: string) => {
+    setData((d) => ({ ...d, goals: d.goals.filter((g) => g.id !== id) }));
+  }, []);
 
   const value = useMemo<HabitsContextValue>(() => {
     const activeHabits = data.habits.filter((h) => !h.archived);
@@ -163,6 +176,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       clearSample,
       loadSample,
       resetAll,
+      addGoal, updateGoal, deleteGoal,
       isDone: (id, key) => isDone(data.logs, id, key),
       isDue: (h, key) => isDue(h, data.logs, key),
       streak: (h) => computeStreak(h, data.logs),
@@ -172,7 +186,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
       routineName: (id) => data.routines.find((r) => r.id === id)?.name ?? "Anytime",
     };
-  }, [data, ready, addHabit, addHabits, updateHabit, deleteHabit, toggle, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll]);
+  }, [data, ready, addHabit, addHabits, updateHabit, deleteHabit, toggle, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

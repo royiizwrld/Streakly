@@ -25,6 +25,11 @@ const schema = z.object({
   routines: z.array(z.object({ id: z.string(), name: z.string(), icon: z.string() })).default(emptyData().routines),
   logs: z.record(z.string(), z.record(date, z.object({ done: z.literal(true), note: z.string().optional() }))).default({}),
   celebrated: z.array(date).default([]), sampleLoaded: z.boolean().default(false),
+  goals: z.array(z.object({
+    id: z.string().min(1), name: z.string().trim().min(1).max(100), habitId: z.string().min(1),
+    targetDays: z.number().int().min(1).max(3650), startDate: date,
+    mode: z.enum(["total", "consecutive"]),
+  })).default([]),
 });
 
 export function parseHabitData(raw: string): HabitData | null {

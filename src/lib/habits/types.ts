@@ -34,6 +34,15 @@ export interface LogEntry {
   note?: string;
 }
 
+export interface Goal {
+  id: string;
+  name: string;
+  habitId: string;
+  targetDays: number;
+  startDate: string;
+  mode: "total" | "consecutive";
+}
+
 /** logs[habitId][YYYY-MM-DD] = entry (present only when completed) */
 export type Logs = Record<string, Record<string, LogEntry>>;
 
@@ -45,6 +54,7 @@ export interface HabitData {
   logs: Logs;
   celebrated: string[];
   sampleLoaded: boolean;
+  goals: Goal[];
 }
 
 export interface StreakInfo {

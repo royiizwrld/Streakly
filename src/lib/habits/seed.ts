@@ -50,6 +50,7 @@ export function emptyData(): HabitData {
     logs: {},
     celebrated: [],
     sampleLoaded: false,
+    goals: [],
   };
 }
 
