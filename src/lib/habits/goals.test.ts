@@ -23,4 +23,7 @@ describe("Habit-linked goals", () => {
   it("restores older saved histories with empty goals", () => {
     expect(parseHabitData('{"version":1}')?.goals).toEqual([]);
   });
+  it("ignores demonstration check-ins for personal goals", () => {
+    expect(goalProgress(goal, { reading: { "2026-09-01": { done: true, sample: true }, "2026-09-02": { done: true } } }, "2026-09-30").count).toBe(1);
+  });
 });

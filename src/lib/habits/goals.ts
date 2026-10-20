@@ -4,7 +4,7 @@ import type { Goal, Logs } from "./types";
 /** Each check-in date counts once; backdated edits and undo recompute progress. */
 export function goalProgress(goal: Goal, logs: Logs, today = todayKey()) {
   const dates = Object.keys(logs[goal.habitId] ?? {})
-    .filter((date) => date >= goal.startDate && date <= today && logs[goal.habitId][date]?.done)
+    .filter((date) => date >= goal.startDate && date <= today && logs[goal.habitId][date]?.done && !logs[goal.habitId][date]?.sample)
     .sort();
   let best = 0;
   let run = 0;
