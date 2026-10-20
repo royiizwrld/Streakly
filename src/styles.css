@@ -83,6 +83,9 @@
 [data-palette="lavender"] { --h: 295; --c: 0.12; }
 [data-palette="lemon"] { --h: 95; --c: 0.16; }
 [data-palette="sunrise"] { --h: 35; --c: 0.16; }
+[data-palette] {
+  --palette-preview: linear-gradient(135deg, oklch(0.66 var(--c) var(--h)), oklch(0.6 var(--c) calc(var(--h) + 35)));
+}
 
 :root {
   --radius: 1rem;
@@ -178,6 +181,9 @@
 
 @utility bg-hero {
   background-image: var(--gradient-hero);
+}
+@utility bg-palette-preview {
+  background-image: var(--palette-preview);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -82,7 +82,7 @@ function SettingsPage() {
               )}
             >
               <span
-                className="grid size-7 shrink-0 place-items-center rounded-full bg-hero text-primary-foreground"
+                className="grid size-7 shrink-0 place-items-center rounded-full bg-palette-preview text-primary-foreground"
               >
                 {palette === p.id && <Check className="size-4" />}
               </span>
