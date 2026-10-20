@@ -92,7 +92,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     setData((d) => {
       const hl = { ...(d.logs[habitId] ?? {}) };
       if (!hl[key]) return d;
-      hl[key] = note.trim() ? { done: true, note: note.trim().slice(0, 200) } : { done: true };
+      hl[key] = note.trim() ? { ...hl[key], done: true, note: note.trim().slice(0, 200) } : { ...hl[key], done: true, note: undefined };
       return { ...d, logs: { ...d.logs, [habitId]: hl } };
     });
   }, []);
