@@ -15,6 +15,7 @@ export interface Habit {
   archived: boolean;
   createdAt: string; // YYYY-MM-DD
   sample?: boolean;
+  sampleHistoryTagged?: boolean;
 }
 
 export interface Category {
@@ -32,6 +33,16 @@ export interface Routine {
 export interface LogEntry {
   done: true;
   note?: string;
+  sample?: boolean;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  habitId: string;
+  targetDays: number;
+  startDate: string;
+  mode: "total" | "consecutive";
 }
 
 /** logs[habitId][YYYY-MM-DD] = entry (present only when completed) */
@@ -45,6 +56,7 @@ export interface HabitData {
   logs: Logs;
   celebrated: string[];
   sampleLoaded: boolean;
+  goals: Goal[];
 }
 
 export interface StreakInfo {

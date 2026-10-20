@@ -50,6 +50,7 @@ export function emptyData(): HabitData {
     logs: {},
     celebrated: [],
     sampleLoaded: false,
+    goals: [],
   };
 }
 
@@ -82,6 +83,7 @@ export function sampleData(): HabitData {
     archived: false,
     createdAt: start,
     sample: true,
+    sampleHistoryTagged: true,
   });
   const habits: Habit[] = [
     mk("Drink a glass of water", "💧", 5, "health", "morning", { type: "daily" }, "7:00 AM"),
@@ -107,7 +109,7 @@ export function sampleData(): HabitData {
       const r = rand(hi * 997 + i * 31);
       if (r < prob) {
         const note = rand(hi * 13 + i * 7) < 0.08 ? notes[(hi + i) % notes.length] : undefined;
-        logs[h.id][d] = note ? { done: true, note } : { done: true };
+        logs[h.id][d] = note ? { done: true, note, sample: true } : { done: true, sample: true };
       }
     }
   });

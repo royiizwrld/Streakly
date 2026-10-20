@@ -18,19 +18,32 @@ const habitSchema = z.object({
   ]),
   reminder: z.string().optional(), archived: z.boolean().default(false), createdAt: date,
   sample: z.boolean().optional(),
+  sampleHistoryTagged: z.boolean().optional(),
 });
 const schema = z.object({
   version: z.literal(1), habits: z.array(habitSchema).default([]),
   categories: z.array(z.object({ id: z.string(), name: z.string(), builtIn: z.boolean() })).default(emptyData().categories),
   routines: z.array(z.object({ id: z.string(), name: z.string(), icon: z.string() })).default(emptyData().routines),
-  logs: z.record(z.string(), z.record(date, z.object({ done: z.literal(true), note: z.string().optional() }))).default({}),
+  logs: z.record(z.string(), z.record(date, z.object({ done: z.literal(true), note: z.string().optional(), sample: z.boolean().optional() }))).default({}),
   celebrated: z.array(date).default([]), sampleLoaded: z.boolean().default(false),
+  goals: z.array(z.object({
+    id: z.string().min(1), name: z.string().trim().min(1).max(100), habitId: z.string().min(1),
+    targetDays: z.number().int().min(1).max(3650), startDate: date,
+    mode: z.enum(["total", "consecutive"]),
+  })).default([]),
 });
 
 export function parseHabitData(raw: string): HabitData | null {
   try {
     const result = schema.safeParse(JSON.parse(raw));
-    return result.success ? result.data : null;
+    if (!result.success) return null;
+    // Older demo histories have no provenance marker; label them once, preserving all entries.
+    for (const habit of result.data.habits) {
+      if (!habit.sample || habit.sampleHistoryTagged) continue;
+      result.data.logs[habit.id] = Object.fromEntries(Object.entries(result.data.logs[habit.id] ?? {}).map(([key, entry]) => [key, { ...entry, sample: true }]));
+      habit.sampleHistoryTagged = true;
+    }
+    return result.data;
   } catch {
     return null;
   }

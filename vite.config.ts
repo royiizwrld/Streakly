@@ -12,6 +12,7 @@ export default defineConfig({
       // Crawl every page before serving the client, not just the HTML entry.
       // Late discovery invalidates shared chunks while hydration is importing them.
       entries: ["src/routes/**/*.tsx", "src/start.ts"],
+      include: ["@radix-ui/react-progress"],
     },
   },
   tanstackStart: {
