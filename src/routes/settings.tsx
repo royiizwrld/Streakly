@@ -52,41 +52,42 @@ function SettingsPage() {
               ["system", "System", Monitor],
             ] as [Mode, string, typeof Sun][]
           ).map(([m, label, Icon]) => (
-            <button
+            <Button
+              variant="outline"
+              aria-pressed={mode === m}
               key={m}
               onClick={() => setMode(m)}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-2xl border p-3 text-sm font-medium",
+                "flex h-auto flex-col items-center gap-1 rounded-2xl border p-3 text-sm font-medium",
                 mode === m ? "border-primary bg-accent" : "border-border",
               )}
             >
               <Icon className="size-5" />
               {label}
-            </button>
+            </Button>
           ))}
         </div>
         <p className="pt-2 text-sm font-semibold">Theme</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {PALETTES.map((p) => (
-            <button
+            <Button
+              variant="outline"
+              aria-pressed={palette === p.id}
               key={p.id}
               data-palette={p.id}
               onClick={() => setPalette(p.id)}
               className={cn(
-                "flex items-center gap-2 rounded-2xl border p-2.5 text-sm font-medium",
+                "flex h-auto justify-start items-center gap-2 rounded-2xl border p-2.5 text-sm font-medium",
                 palette === p.id ? "border-primary ring-2 ring-ring" : "border-border",
               )}
             >
               <span
-                className="grid size-7 place-items-center rounded-full text-white"
-                style={{
-                  background: `linear-gradient(135deg, oklch(0.66 ${p.chroma} ${p.hue}), oklch(0.6 ${p.chroma} ${p.hue + 35}))`,
-                }}
+                className="grid size-7 shrink-0 place-items-center rounded-full bg-hero text-primary-foreground"
               >
                 {palette === p.id && <Check className="size-4" />}
               </span>
               {p.name}
-            </button>
+            </Button>
           ))}
         </div>
       </Section>

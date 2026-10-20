@@ -14,6 +14,10 @@ export const PALETTES = [
   { id: "ember", name: "Ember", hue: 55, chroma: 0.17 },
   { id: "glacier", name: "Glacier", hue: 260, chroma: 0.11 },
   { id: "graphite", name: "Graphite", hue: 250, chroma: 0.02 },
+  { id: "mint", name: "Mint", hue: 165, chroma: 0.10 },
+  { id: "cherry", name: "Cherry", hue: 25, chroma: 0.20 },
+  { id: "lavender", name: "Lavender", hue: 295, chroma: 0.12 },
+  { id: "lemon", name: "Lemon", hue: 95, chroma: 0.16 },
 ] as const;
 export type PaletteId = (typeof PALETTES)[number]["id"];
 

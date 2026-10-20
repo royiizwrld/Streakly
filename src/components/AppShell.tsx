@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { BarChart3, CalendarDays, CheckCircle2, ListTodo, Moon, Settings, Sun } from "lucide-react";
+import { BarChart3, CalendarDays, CheckCircle2, ListTodo, Moon, Settings, Sun, Target } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { CoachPanel } from "@/components/coach/CoachPanel";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ const NAV = [
   { to: "/habits", label: "Habits", icon: ListTodo },
   { to: "/history", label: "History", icon: CalendarDays },
   { to: "/stats", label: "Stats", icon: BarChart3 },
+  { to: "/goals", label: "Goals", icon: Target },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -50,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-5xl px-4 pb-32 pt-6 md:pb-16">{children}</main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5">
+        <div className="mx-auto grid max-w-md grid-cols-6">
           {NAV.map((n) => (
             <Link
               key={n.to}
