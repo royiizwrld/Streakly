@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
@@ -21,6 +22,11 @@ import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -61,6 +67,7 @@ const HabitsHabitIdRoute = HabitsHabitIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/goals': typeof GoalsRoute
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/goals': typeof GoalsRoute
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/goals': typeof GoalsRoute
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/goals'
     | '/history'
     | '/settings'
     | '/stats'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/goals'
     | '/history'
     | '/settings'
     | '/stats'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/goals'
     | '/history'
     | '/settings'
     | '/stats'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GoalsRoute: typeof GoalsRoute
   HistoryRoute: typeof HistoryRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -197,6 +217,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GoalsRoute: GoalsRoute,
   HistoryRoute: HistoryRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
