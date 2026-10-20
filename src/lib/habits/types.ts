@@ -15,6 +15,7 @@ export interface Habit {
   archived: boolean;
   createdAt: string; // YYYY-MM-DD
   sample?: boolean;
+  sampleHistoryTagged?: boolean;
 }
 
 export interface Category {
@@ -32,6 +33,7 @@ export interface Routine {
 export interface LogEntry {
   done: true;
   note?: string;
+  sample?: boolean;
 }
 
 export interface Goal {

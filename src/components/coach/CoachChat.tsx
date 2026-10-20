@@ -98,7 +98,7 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
         <CoachMark />
         <div className="flex-1">
           <SheetTitle className="font-display text-base font-bold">Sprout · Habit coach</SheetTitle>
-          <SheetDescription className="text-xs">Looks at your check-ins and suggests small tweaks.</SheetDescription>
+          <SheetDescription className="text-xs">{buildCoachSummary(data).hasUserHistory ? "Your personal check-ins · Sample history excluded" : "No personal check-ins yet · Sample history excluded"}</SheetDescription>
         </div>
         <Button
           variant="ghost"
