@@ -88,3 +88,8 @@ export function saveThread(id: string, messages: UIMessage[]) {
 export function deleteThread(id: string) {
   publish(threads.filter((t) => t.id !== id));
 }
+export function clearThreads() {
+  loadThreads();
+  publish([]);
+  removeStored("ht-coach-chat");
+}
