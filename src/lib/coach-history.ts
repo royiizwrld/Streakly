@@ -28,7 +28,7 @@ export function loadThreads() {
   publish(threads);
   if (readStored(THREADS_KEY) !== null) removeStored("ht-coach-chat");
 }
-export function createThread(id = crypto.randomUUID()) {
+export function createThread(id: string = crypto.randomUUID()) {
   loadThreads();
   const existing = threads.find((t) => t.id === id);
   if (existing) return existing;
