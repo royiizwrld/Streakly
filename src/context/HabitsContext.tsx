@@ -15,6 +15,7 @@ interface HabitsContextValue {
   updateHabit: (id: string, patch: Partial<Habit>) => void;
   deleteHabit: (id: string) => void;
   toggle: (habitId: string, key: string) => void;
+  checkInGoal: (habitId: string, key: string) => void;
   setNote: (habitId: string, key: string, note: string) => void;
   addCategory: (name: string) => Category;
   deleteCategory: (id: string) => void;
@@ -97,6 +98,15 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const checkInGoal = useCallback((habitId: string, key: string) => {
+    setData((d) => {
+      const logs = { ...(d.logs[habitId] ?? {}) };
+      if (logs[key]?.done && !logs[key]?.sample) delete logs[key];
+      else logs[key] = { done: true };
+      return { ...d, logs: { ...d.logs, [habitId]: logs } };
+    });
+  }, []);
+
   const addCategory = useCallback((name: string) => {
     const c: Category = { id: uid(), name: name.trim(), builtIn: false };
     setData((d) => ({ ...d, categories: [...d.categories, c] }));
@@ -167,6 +177,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       updateHabit,
       deleteHabit,
       toggle,
+      checkInGoal,
       setNote,
       addCategory,
       deleteCategory,
@@ -186,7 +197,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
       routineName: (id) => data.routines.find((r) => r.id === id)?.name ?? "Anytime",
     };
-  }, [data, ready, addHabit, addHabits, updateHabit, deleteHabit, toggle, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
+  }, [data, ready, addHabit, addHabits, updateHabit, deleteHabit, toggle, checkInGoal, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

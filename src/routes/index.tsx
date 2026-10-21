@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { fireConfetti } from "@/lib/celebrate";
 import type { Habit } from "@/lib/habits/types";
+import { GoalCheckIn } from "@/components/habit/GoalCheckIn";
+import { goalProgress } from "@/lib/habits/goals";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -172,6 +175,18 @@ function Today() {
         </ToggleGroup>
         <FilterBar value={filters} onChange={setFilters} />
       </div>
+
+      {h.data.goals.length > 0 && <section className="space-y-3" aria-label="Goal progress">
+        <div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold">Your goals</h2><Button variant="ghost" size="sm" asChild><Link to="/goals">All goals</Link></Button></div>
+        <div className="grid gap-3 sm:grid-cols-2">{h.data.goals.map((goal) => {
+          const gp = goalProgress(goal, h.data.logs, day);
+          return <article key={goal.id} className="min-w-0 space-y-3 rounded-lg border border-border bg-card p-4">
+            <div><h3 className="break-words font-semibold">{goal.name}</h3><p className="text-sm text-muted-foreground">{h.getHabit(goal.habitId)?.name} · {Math.min(gp.count, goal.targetDays)} / {goal.targetDays} days{gp.achieved ? " · Achieved" : ""}</p></div>
+            <Progress value={gp.pct} aria-label={`${goal.name} progress`} />
+            <GoalCheckIn goal={goal} dateKey={day} />
+          </article>;
+        })}</div>
+      </section>}
 
       {h.activeHabits.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border p-10 text-center">
