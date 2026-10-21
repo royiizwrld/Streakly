@@ -1,5 +1,5 @@
 import type { UIMessage } from "ai";
-import { readStored, writeStored } from "./browser-storage";
+import { readStored, writeStored, removeStored } from "./browser-storage";
 export type CoachThread = { id: string; title: string; updatedAt: string; messages: UIMessage[] };
 export const THREADS_KEY = "ht-coach-threads";
 let threads: CoachThread[] = [];
@@ -19,13 +19,14 @@ export function loadThreads() {
   loaded = true;
   try {
     const saved = JSON.parse(readStored(THREADS_KEY) ?? "[]");
-    if (Array.isArray(saved)) threads = saved.filter((t) => t && typeof t.id === "string" && typeof t.title === "string" && Array.isArray(t.messages));
-    if (!threads.length) {
+    if (Array.isArray(saved)) threads = saved.filter((t) => t && typeof t.id === "string" && typeof t.title === "string" && Array.isArray(t.messages) && t.messages.every((m: UIMessage) => m && typeof m.id === "string" && ["user", "assistant", "system"].includes(m.role) && Array.isArray(m.parts)));
+    if (readStored(THREADS_KEY) === null && !threads.length) {
       const legacy = JSON.parse(readStored("ht-coach-chat") ?? "[]");
       if (Array.isArray(legacy) && legacy.length) threads = [{ id: crypto.randomUUID(), title: "Previous conversation", updatedAt: new Date().toISOString(), messages: legacy }];
     }
   } catch { /* Keep the in-memory chat usable. */ }
   publish(threads);
+  if (readStored(THREADS_KEY) !== null) removeStored("ht-coach-chat");
 }
 export function createThread(id = crypto.randomUUID()) {
   loadThreads();

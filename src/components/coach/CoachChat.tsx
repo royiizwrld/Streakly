@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { Sprout, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -149,7 +149,7 @@ export default function CoachChat({ threadId }: { threadId: string }) {
                         {part.state !== "input-streaming" && part.input ? (
                           <SuggestionCard id={part.toolCallId} change={part.input as ProposedChange} />
                         ) : null}
-                        ) : null}</ToolContent>
+                        </ToolContent>
                       </Tool>
                     );
                   }
