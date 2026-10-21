@@ -25,11 +25,16 @@ export function CoachPanel() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
           {open && (
-            <div className="p-5"><SheetTitle className="mb-1 font-display text-lg">Sprout · Habit coach</SheetTitle><SheetDescription className="mb-5">Your personal habit conversations</SheetDescription><CoachHistory onSelect={() => setOpen(false)} /></div>
+            <div className="p-5">
+              <SheetTitle className="mb-1 font-display text-lg">Sprout · Habit coach</SheetTitle>
+              <SheetDescription className="mb-5">
+                Your personal habit conversations
+              </SheetDescription>
+              <CoachHistory onSelect={() => setOpen(false)} />
+            </div>
           )}
         </SheetContent>
       </Sheet>
     </>
   );
 }
-

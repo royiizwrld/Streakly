@@ -54,7 +54,7 @@ export function VoiceTyping({ disabled, onTranscript }: { disabled: boolean; onT
       if (!transcript.trim()) throw new Error("No speech detected. Please record again.");
       if (mounted.current && !abort.signal.aborted) onTranscript(transcript.trim());
     } catch (err) { if (mounted.current && !abort.signal.aborted) setError(err instanceof Error ? err.message : "Couldn't transcribe this recording."); }
-    finally { if (mounted.current) setState("idle"); controller.current = null; }
+    finally { if (controller.current === abort) { if (mounted.current) setState("idle"); controller.current = null; } }
   };
   return <div className="min-w-0 flex-1">
     <div className="flex items-center gap-2">
