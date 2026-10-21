@@ -16,6 +16,8 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ApiBulkHabitsRouteImport } from './routes/api/bulk-habits'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
+import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
+import { Route as CoachThreadIdRouteImport } from './routes/coach.$threadId'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
 import { Route as HabitsHabitIdRouteImport } from './routes/habits.$habitId'
 
@@ -54,6 +56,16 @@ const ApiCoachRoute = ApiCoachRouteImport.update({
   path: '/api/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
+  id: '/api/transcribe',
+  path: '/api/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachThreadIdRoute = CoachThreadIdRouteImport.update({
+  id: '/coach/$threadId',
+  path: '/coach/$threadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HabitsIndexRoute = HabitsIndexRouteImport.update({
   id: '/habits/',
   path: '/habits/',
@@ -73,6 +85,8 @@ export interface FileRoutesByFullPath {
   '/stats': typeof StatsRoute
   '/api/bulk-habits': typeof ApiBulkHabitsRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
+  '/coach/$threadId': typeof CoachThreadIdRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/habits/': typeof HabitsIndexRoute
 }
@@ -84,6 +98,8 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/api/bulk-habits': typeof ApiBulkHabitsRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
+  '/coach/$threadId': typeof CoachThreadIdRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/habits': typeof HabitsIndexRoute
 }
@@ -96,6 +112,8 @@ export interface FileRoutesById {
   '/stats': typeof StatsRoute
   '/api/bulk-habits': typeof ApiBulkHabitsRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
+  '/coach/$threadId': typeof CoachThreadIdRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
   '/habits/': typeof HabitsIndexRoute
 }
@@ -109,6 +127,8 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/bulk-habits'
     | '/api/coach'
+    | '/api/transcribe'
+    | '/coach/$threadId'
     | '/habits/$habitId'
     | '/habits/'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +140,8 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/bulk-habits'
     | '/api/coach'
+    | '/api/transcribe'
+    | '/coach/$threadId'
     | '/habits/$habitId'
     | '/habits'
   id:
@@ -131,6 +153,8 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/bulk-habits'
     | '/api/coach'
+    | '/api/transcribe'
+    | '/coach/$threadId'
     | '/habits/$habitId'
     | '/habits/'
   fileRoutesById: FileRoutesById
@@ -143,6 +167,8 @@ export interface RootRouteChildren {
   StatsRoute: typeof StatsRoute
   ApiBulkHabitsRoute: typeof ApiBulkHabitsRoute
   ApiCoachRoute: typeof ApiCoachRoute
+  ApiTranscribeRoute: typeof ApiTranscribeRoute
+  CoachThreadIdRoute: typeof CoachThreadIdRoute
   HabitsHabitIdRoute: typeof HabitsHabitIdRoute
   HabitsIndexRoute: typeof HabitsIndexRoute
 }
@@ -198,6 +224,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/transcribe': {
+      id: '/api/transcribe'
+      path: '/api/transcribe'
+      fullPath: '/api/transcribe'
+      preLoaderRoute: typeof ApiTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach/$threadId': {
+      id: '/coach/$threadId'
+      path: '/coach/$threadId'
+      fullPath: '/coach/$threadId'
+      preLoaderRoute: typeof CoachThreadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/habits/': {
       id: '/habits/'
       path: '/habits'
@@ -223,6 +263,8 @@ const rootRouteChildren: RootRouteChildren = {
   StatsRoute: StatsRoute,
   ApiBulkHabitsRoute: ApiBulkHabitsRoute,
   ApiCoachRoute: ApiCoachRoute,
+  ApiTranscribeRoute: ApiTranscribeRoute,
+  CoachThreadIdRoute: CoachThreadIdRoute,
   HabitsHabitIdRoute: HabitsHabitIdRoute,
   HabitsIndexRoute: HabitsIndexRoute,
 }
