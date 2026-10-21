@@ -1,6 +1,9 @@
 import { lazy, Suspense, useState } from "react";
 import { Loader2, Sprout } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { CoachHistory } from "./CoachHistory";
+import { useMatchRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 // The chat (AI SDK + markdown renderer) is heavy; load it only when the coach is opened
 // so every page becomes interactive quickly.
@@ -21,9 +24,11 @@ const preload = () => void import("./CoachChat");
 
 export function CoachPanel() {
   const [open, setOpen] = useState(false);
+  const matchRoute = useMatchRoute();
+  if (matchRoute({ to: "/coach/$threadId", fuzzy: true })) return null;
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
         onPointerEnter={preload}
@@ -35,13 +40,11 @@ export function CoachPanel() {
           <Sprout className="size-5" />
         </span>
         Coach
-      </button>
+      </Button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md [&>button:first-child]:hidden">
           {open && (
-            <Suspense fallback={<CoachLoading />}>
-              <CoachChat onClose={() => setOpen(false)} />
-            </Suspense>
+            <div className="p-5"><SheetTitle className="mb-1 font-display text-lg">Sprout · Habit coach</SheetTitle><SheetDescription className="mb-5">Your personal habit conversations</SheetDescription><CoachHistory onSelect={() => setOpen(false)} /></div>
           )}
         </SheetContent>
       </Sheet>

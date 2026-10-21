@@ -1,20 +1,20 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
-import { Sprout, Trash2, X } from "lucide-react";
+import { Sprout, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useHabits } from "@/context/HabitsContext";
 import { buildCoachSummary } from "@/lib/habits/summary";
-import { SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { SuggestionCard, type ProposedChange } from "./SuggestionCard";
-import { readStored, writeStored, removeStored } from "@/lib/browser-storage";
+import { getThreads, saveThread } from "@/lib/coach-history";
+import { VoiceTyping } from "./VoiceTyping";
+import { Tool, ToolHeader, ToolContent, ToolInput } from "@/components/ai-elements/tool";
 
-const CHAT_KEY = "ht-coach-chat";
 const STARTERS = [
   "Which habits am I struggling with?",
   "Why do I keep missing my gym days?",
@@ -32,7 +32,7 @@ export function CoachMark({ className = "size-9" }: { className?: string }) {
   );
 }
 
-export default function CoachChat({ onClose }: { onClose: () => void }) {
+export default function CoachChat({ threadId }: { threadId: string }) {
   const { data } = useHabits();
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -40,7 +40,8 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { messages, sendMessage, status, stop, setMessages, error } = useChat({
-    id: "coach",
+    id: threadId,
+    messages: getThreads().find((t) => t.id === threadId)?.messages ?? [],
     transport: new DefaultChatTransport({
       api: "/api/coach",
       prepareSendMessagesRequest: ({ messages }) => ({
@@ -58,23 +59,11 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
     },
   });
 
-  // Restore single conversation from this browser once.
-  const restored = useRef(false);
   useEffect(() => {
-    if (restored.current) return;
-    restored.current = true;
-    try {
-      const saved = JSON.parse(readStored(CHAT_KEY) ?? "[]") as UIMessage[];
-      if (Array.isArray(saved) && saved.length && saved.every((m) => m && typeof m.id === "string" && ["user", "assistant", "system"].includes(m.role) && Array.isArray(m.parts))) setMessages(saved);
-    } catch {
-      /* ignore */
-    }
-  }, [setMessages]);
-
-  useEffect(() => {
-    if (!restored.current || status === "streaming" || status === "submitted") return;
-    writeStored(CHAT_KEY, JSON.stringify(messages.slice(-40)));
-  }, [messages, status]);
+    if (status === "streaming") return;
+    saveThread(threadId, messages);
+  }, [messages, status, threadId]);
+  useEffect(() => () => { stop(); }, [stop]);
 
   useEffect(() => {
     if (status === "ready" || status === "error") textareaRef.current?.focus();
@@ -97,8 +86,8 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
       <div className="flex items-center gap-3 border-b border-border px-4 py-3">
         <CoachMark />
         <div className="flex-1">
-          <SheetTitle className="font-display text-base font-bold">Sprout · Habit coach</SheetTitle>
-          <SheetDescription className="text-xs">{buildCoachSummary(data).hasUserHistory ? "Your personal check-ins · Sample history excluded" : "No personal check-ins yet · Sample history excluded"}</SheetDescription>
+          <h1 className="font-display text-base font-bold">Sprout · Habit coach</h1>
+          <p className="text-xs text-muted-foreground">{buildCoachSummary(data).hasUserHistory ? "Your personal check-ins · Sample history excluded" : "No personal check-ins yet · Sample history excluded"}</p>
         </div>
         <Button
           variant="ghost"
@@ -109,13 +98,10 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
           disabled={!messages.length || busy}
           onClick={() => {
             setMessages([]);
-            removeStored(CHAT_KEY);
+            saveThread(threadId, []);
           }}
         >
           <Trash2 />
-        </Button>
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Close coach" onClick={onClose}>
-          <X />
         </Button>
       </div>
 
@@ -132,13 +118,13 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
               </div>
               <div className="flex flex-wrap justify-center gap-2">
                 {STARTERS.map((s) => (
-                  <button
+                  <Button variant="outline"
                     key={s}
                     onClick={() => send(s)}
                     className="rounded-full border border-border bg-card px-3 py-1.5 text-left text-sm hover:border-primary hover:bg-accent"
                   >
                     {s}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -157,11 +143,14 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
                     return m.role === "user" ? <p key={i}>{part.text}</p> : <MessageResponse key={i}>{part.text}</MessageResponse>;
                   if (part.type === "tool-propose_change") {
                     return (
-                      <div key={i} className="space-y-2">
+                      <Tool key={i} defaultOpen={false}>
+                        <ToolHeader type="tool-propose_change" state={part.state} title="Habit adjustment" />
+                        <ToolContent><ToolInput input={part.input} />
                         {part.state !== "input-streaming" && part.input ? (
                           <SuggestionCard id={part.toolCallId} change={part.input as ProposedChange} />
                         ) : null}
-                      </div>
+                        ) : null}</ToolContent>
+                      </Tool>
                     );
                   }
                   return null;
@@ -177,7 +166,7 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
           )}
           {error && status === "error" && (
             <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
-              The coach couldn't answer that one. Please try again in a moment.
+              {error.message}
             </p>
           )}
         </ConversationContent>
@@ -193,7 +182,8 @@ export default function CoachChat({ onClose }: { onClose: () => void }) {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about your habits…"
           />
-          <PromptInputFooter className="justify-end">
+          <PromptInputFooter className="justify-between">
+            <VoiceTyping disabled={busy} onTranscript={(text) => { setInput((draft) => draft ? `${draft} ${text}` : text); textareaRef.current?.focus(); }} />
             <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !input.trim()} />
           </PromptInputFooter>
         </PromptInput>
