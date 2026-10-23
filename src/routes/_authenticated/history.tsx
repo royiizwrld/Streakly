@@ -6,7 +6,7 @@ import { formatLong, todayKey } from "@/lib/habits/dates";
 import { Heatmap, MonthSelector } from "@/components/Heatmap";
 import { FilterBar, NO_FILTER, applyFilters, type Filters } from "@/components/FilterBar";
 
-export const Route = createFileRoute("/history")({
+export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
       { title: "History — Streakly" },

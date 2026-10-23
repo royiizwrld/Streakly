@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { removeStored } from "@/lib/browser-storage";
 import { clearThreads } from "@/lib/coach-history";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Streakly" },

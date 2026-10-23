@@ -8,7 +8,7 @@ import { Heatmap, MonthSelector } from "@/components/Heatmap";
 import { HabitFormDialog } from "@/components/habit/HabitFormDialog";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/habits/$habitId")({
+export const Route = createFileRoute("/_authenticated/habits/$habitId")({
   head: () => ({
     meta: [
       { title: "Habit details — Streakly" },

@@ -6,7 +6,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { addDays, formatShort, todayKey, weekStart, weekday, WEEKDAY_LONG } from "@/lib/habits/dates";
 import { completionRate, computeStreak, dayProgress, weekRate } from "@/lib/habits/logic";
 
-export const Route = createFileRoute("/stats")({
+export const Route = createFileRoute("/_authenticated/stats")({
   head: () => ({
     meta: [
       { title: "Stats — Streakly" },
