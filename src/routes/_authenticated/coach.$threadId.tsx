@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { CoachHistory } from "@/components/coach/CoachHistory";
 import { createThread, loadThreads } from "@/lib/coach-history";
 const CoachChat = lazy(() => import("@/components/coach/CoachChat"));
-export const Route = createFileRoute("/coach/$threadId")({
+export const Route = createFileRoute("/_authenticated/coach/$threadId")({
   head: () => ({
     meta: [
       { title: "Coach conversation — Streakly" },

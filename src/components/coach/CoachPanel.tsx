@@ -15,9 +15,9 @@ export function CoachPanel() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open habit coach"
-        className="fixed bottom-20 right-4 z-40 flex items-center gap-2 rounded-full bg-hero py-2 pl-2 pr-4 font-semibold text-primary-foreground shadow-card transition-transform hover:scale-105 md:bottom-6 md:right-6"
+        className="fixed bottom-20 right-4 z-40 flex h-12 items-center gap-2 rounded-full bg-hero pl-1.5 pr-5 font-semibold text-primary-foreground shadow-card transition-transform hover:scale-105 md:bottom-6 md:right-6"
       >
-        <span className="grid size-9 place-items-center rounded-full bg-primary-foreground/20">
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-foreground/20">
           <Sprout className="size-5" />
         </span>
         Coach

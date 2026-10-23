@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/habits/")({
+export const Route = createFileRoute("/_authenticated/habits/")({
   validateSearch: (s: Record<string, unknown>): { bulk?: boolean } => (s.bulk ? { bulk: true } : {}),
   head: () => ({
     meta: [

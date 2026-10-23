@@ -14,7 +14,7 @@ import { GoalCheckIn } from "@/components/habit/GoalCheckIn";
 import { goalProgress } from "@/lib/habits/goals";
 import { Progress } from "@/components/ui/progress";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/today")({
   head: () => ({
     meta: [
       { title: "Today — Streakly Habit Tracker" },

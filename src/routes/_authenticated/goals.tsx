@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { GoalFormDialog } from "@/components/habit/GoalFormDialog";
 import { GoalCheckIn } from "@/components/habit/GoalCheckIn";
 
-export const Route = createFileRoute("/goals")({
+export const Route = createFileRoute("/_authenticated/goals")({
   head: () => ({ meta: [
     { title: "Goals — Streakly" },
     { name: "description", content: "Set personal habit goals and track progress with your daily check-ins." },
