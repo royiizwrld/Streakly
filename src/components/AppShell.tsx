@@ -6,7 +6,7 @@ import { CoachPanel } from "@/components/coach/CoachPanel";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
-  { to: "/", label: "Today", icon: CheckCircle2 },
+  { to: "/today", label: "Today", icon: CheckCircle2 },
   { to: "/habits", label: "Habits", icon: ListTodo },
   { to: "/history", label: "History", icon: CalendarDays },
   { to: "/stats", label: "Stats", icon: BarChart3 },
