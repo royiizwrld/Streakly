@@ -241,7 +241,7 @@ function Landing() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild className="rounded-full">
-              <Link to="/login">Sign in</Link>
+              <Link to="/login" search={{ redirect: undefined }}>Sign in</Link>
             </Button>
             <Button size="sm" asChild className="rounded-full">
               <Link to="/signup">Get started</Link>
@@ -293,7 +293,7 @@ function Landing() {
                 <Link to="/signup">Get started free</Link>
               </Button>
               <Button variant="ghost" size="lg" asChild className="rounded-full">
-                <Link to="/login">Sign in</Link>
+                <Link to="/login" search={{ redirect: undefined }}>Sign in</Link>
               </Button>
             </div>
           </div>
@@ -395,7 +395,7 @@ function Landing() {
                 asChild
                 className="rounded-full text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
               >
-                <Link to="/login">Sign in</Link>
+                <Link to="/login" search={{ redirect: undefined }}>Sign in</Link>
               </Button>
             </div>
           </div>

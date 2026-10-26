@@ -95,7 +95,7 @@ function SignupPage() {
             {resent ? "Email sent again" : "Resend email"}
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            <Link to="/login" className="font-medium text-primary hover:underline">
+            <Link to="/login" search={{ redirect: undefined }} className="font-medium text-primary hover:underline">
               Back to sign in
             </Link>
           </p>
@@ -197,7 +197,7 @@ function SignupPage() {
       </form>
       <p className="mt-5 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-primary hover:underline">
+        <Link to="/login" search={{ redirect: undefined }} className="font-medium text-primary hover:underline">
           Sign in
         </Link>
       </p>

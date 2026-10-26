@@ -48,7 +48,7 @@ function ForgotPasswordPage() {
             we've sent a link to reset your password.
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            <Link to="/login" className="font-medium text-primary hover:underline">
+            <Link to="/login" search={{ redirect: undefined }} className="font-medium text-primary hover:underline">
               Back to sign in
             </Link>
           </p>
@@ -83,7 +83,7 @@ function ForgotPasswordPage() {
       </form>
       <p className="mt-5 text-center text-sm text-muted-foreground">
         Remembered it?{" "}
-        <Link to="/login" className="font-medium text-primary hover:underline">
+        <Link to="/login" search={{ redirect: undefined }} className="font-medium text-primary hover:underline">
           Sign in
         </Link>
       </p>
