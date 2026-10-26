@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-4 px-4">
-          <Link to="/" className="flex items-center gap-2 font-display text-lg font-extrabold">
+          <Link to="/today" className="flex items-center gap-2 font-display text-lg font-extrabold">
             <span className="grid size-8 place-items-center rounded-xl bg-hero text-primary-foreground">✓</span>
             Streakly
           </Link>
@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
-                activeOptions={{ exact: n.to === "/" }}
+                activeOptions={{ exact: n.to === "/today" }}
                 className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground"
               >
                 {n.label}
@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={n.to}
               to={n.to}
-              activeOptions={{ exact: n.to === "/" }}
+              activeOptions={{ exact: n.to === "/today" }}
               className="flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground data-[status=active]:text-primary"
             >
               <n.icon className="size-5" />
