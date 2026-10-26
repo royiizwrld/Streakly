@@ -62,7 +62,7 @@ function ResetPasswordPage() {
     }
     await supabase.auth.signOut();
     toast.success("Password updated — sign in with your new password.");
-    navigate({ to: "/login", replace: true });
+    navigate({ to: "/login", search: { redirect: undefined }, replace: true });
   }
 
   if (valid === null) {

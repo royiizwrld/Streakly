@@ -207,7 +207,7 @@ function Landing() {
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       if (data.session) navigate({ to: "/today", replace: true });
-      else if (isStandalone()) navigate({ to: "/login", replace: true });
+      else if (isStandalone()) navigate({ to: "/login", search: { redirect: undefined }, replace: true });
     });
     return () => {
       active = false;
