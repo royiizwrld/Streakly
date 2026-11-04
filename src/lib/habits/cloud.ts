@@ -6,7 +6,7 @@ import type { Category, Frequency, Goal, Habit, HabitData, Logs, Routine } from 
 type Client = SupabaseClient<Database>;
 
 /** Read every table for the signed-in user into the in-memory shape the app uses. */
-export async function loadCloudData(sb: Client): Promise<HabitData> {
+export async function loadCloudData(sb: Client): Promise<{ data: HabitData; snapshot: HabitData }> {
   const [cats, routs, habits, logs, goals, cele] = await Promise.all([
     sb.from("habit_categories").select("id,name,built_in").order("created_at"),
     sb.from("habit_routines").select("id,name,icon").order("created_at"),
@@ -29,7 +29,9 @@ export async function loadCloudData(sb: Client): Promise<HabitData> {
   data.logs = logs;
   data.goals = goals.data!.map((g) => ({ id: g.id, name: g.name, habitId: g.habit_id, targetDays: g.target_days, startDate: g.start_date, mode: g.mode === "consecutive" ? "consecutive" : "total" }));
   data.celebrated = cele.data!.map((c) => c.day).reverse();
-  return data;
+  // Defaults that were never saved stay out of the snapshot so the first sync stores them.
+  const snapshot: HabitData = { ...structuredClone(data), categories: cats.data!.length ? data.categories : [], routines: routs.data!.length ? data.routines : [] };
+  return { data, snapshot };
 }
 
 async function fetchAllLogs(sb: Client): Promise<Logs> {
