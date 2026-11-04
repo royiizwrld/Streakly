@@ -1,13 +1,27 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { computeDiff, diffIsEmpty, loadCloudData, pushDiff } from "@/lib/habits/cloud";
 import type { Category, Goal, Habit, HabitData, Routine, StreakInfo } from "@/lib/habits/types";
 import { emptyData, sampleData, uid } from "@/lib/habits/seed";
 import { computeStreak, completionRate, dayProgress, isDone, isDue } from "@/lib/habits/logic";
 import { todayKey } from "@/lib/habits/dates";
-import { readStored, writeStored } from "@/lib/browser-storage";
-import { HABITS_STORAGE_KEY, loadHabitData, parseHabitData } from "@/lib/habits/storage";
+import { readStored, removeStored, writeStored } from "@/lib/browser-storage";
+import { HABITS_STORAGE_KEY, parseHabitData } from "@/lib/habits/storage";
+
+export type SyncStatus = "idle" | "saving" | "error";
 
 interface HabitsContextValue {
   ready: boolean;
+  loadError: string | null;
+  reload: () => void;
+  syncStatus: SyncStatus;
+  retrySync: () => void;
+  /** Habits found in this browser from before accounts existed, awaiting an import decision. */
+  localImport: HabitData | null;
+  importLocal: () => void;
+  skipImport: () => void;
   data: HabitData;
   activeHabits: Habit[];
   addHabit: (h: Omit<Habit, "id" | "createdAt" | "archived">) => Habit;
@@ -42,20 +56,126 @@ interface HabitsContextValue {
 const Ctx = createContext<HabitsContextValue | null>(null);
 
 export function HabitsProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [data, setData] = useState<HabitData>(emptyData);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadNonce, setLoadNonce] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [localImport, setLocalImport] = useState<HabitData | null>(null);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const snapshot = useRef<HabitData | null>(null);
+  const flushing = useRef(false);
+  const dirty = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Load this account's data from the cloud.
   useEffect(() => {
-    setData(loadHabitData());
-    setReady(true);
-  }, []);
+    if (!userId) return;
+    let active = true;
+    setReady(false);
+    setLoadError(null);
+    snapshot.current = null;
+    loadCloudData(supabase)
+      .then(({ data: loaded, snapshot: snap }) => {
+        if (!active) return;
+        snapshot.current = snap;
+        setData(loaded);
+        setReady(true);
+        const raw = readStored(HABITS_STORAGE_KEY);
+        const local = raw ? parseHabitData(raw) : null;
+        const hasReal = local?.habits.some((h) => !h.sample);
+        if (local && hasReal && readStored(`ht-import-skipped-${userId}`) !== "1") setLocalImport(local);
+      })
+      .catch(() => {
+        if (active) setLoadError("We couldn't load your habits. Check your connection and try again.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId, loadNonce]);
 
+  const flush = useCallback(async () => {
+    if (!userId || !snapshot.current) return;
+    if (flushing.current) {
+      dirty.current = true;
+      return;
+    }
+    flushing.current = true;
+    const target = dataRef.current;
+    const diff = computeDiff(snapshot.current, target);
+    if (diffIsEmpty(diff)) {
+      flushing.current = false;
+      setSyncStatus("idle");
+      return;
+    }
+    setSyncStatus("saving");
+    try {
+      await pushDiff(supabase, userId, diff);
+      snapshot.current = structuredClone(target);
+      setSyncStatus("idle");
+    } catch {
+      setSyncStatus((prev) => {
+        if (prev !== "error") toast.error("Couldn't save your latest changes", { description: "They're kept on this device. We'll retry when you're back online.", action: { label: "Retry", onClick: () => void flushRef.current() } });
+        return "error";
+      });
+    } finally {
+      flushing.current = false;
+      if (dirty.current) {
+        dirty.current = false;
+        void flushRef.current();
+      }
+    }
+  }, [userId]);
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+
+  // Optimistic: the UI already shows the change; save it shortly after.
   useEffect(() => {
     if (!ready) return;
-    const saved = readStored(HABITS_STORAGE_KEY);
-    if (saved !== null && !parseHabitData(saved)) return;
-    writeStored(HABITS_STORAGE_KEY, JSON.stringify(data));
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => void flushRef.current(), 300);
   }, [data, ready]);
+
+  useEffect(() => {
+    const retry = () => void flushRef.current();
+    window.addEventListener("online", retry);
+    const flushOnHide = () => { if (document.visibilityState === "hidden") retry(); };
+    document.addEventListener("visibilitychange", flushOnHide);
+    return () => {
+      window.removeEventListener("online", retry);
+      document.removeEventListener("visibilitychange", flushOnHide);
+    };
+  }, []);
+
+  const importLocal = useCallback(() => {
+    const local = localImport;
+    if (!local) return;
+    setData((d) => {
+      const realHabits = local.habits.filter((h) => !h.sample && !d.habits.some((x) => x.id === h.id));
+      const ids = new Set(realHabits.map((h) => h.id));
+      const logs = { ...d.logs };
+      for (const id of ids) logs[id] = Object.fromEntries(Object.entries(local.logs[id] ?? {}).filter(([, e]) => !e.sample).map(([k, e]) => [k, e.note ? { done: true as const, note: e.note } : { done: true as const }]));
+      return {
+        ...d,
+        habits: [...d.habits, ...realHabits.map(({ sample: _s, sampleHistoryTagged: _t, ...h }) => h)],
+        logs,
+        categories: [...d.categories, ...local.categories.filter((c) => !d.categories.some((x) => x.id === c.id))],
+        routines: [...d.routines, ...local.routines.filter((r) => !d.routines.some((x) => x.id === r.id))],
+        goals: [...d.goals, ...local.goals.filter((g) => ids.has(g.habitId) && !d.goals.some((x) => x.id === g.id))],
+      };
+    });
+    removeStored(HABITS_STORAGE_KEY);
+    setLocalImport(null);
+    toast.success("Your habits were imported to your account");
+  }, [localImport]);
+
+  const skipImport = useCallback(() => {
+    if (userId) writeStored(`ht-import-skipped-${userId}`, "1");
+    setLocalImport(null);
+  }, [userId]);
 
   const addHabit = useCallback((h: Omit<Habit, "id" | "createdAt" | "archived">) => {
     const habit: Habit = { ...h, id: uid(), createdAt: todayKey(), archived: false };
@@ -170,6 +290,13 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     const activeHabits = data.habits.filter((h) => !h.archived);
     return {
       ready,
+      loadError,
+      reload: () => setLoadNonce((n) => n + 1),
+      syncStatus,
+      retrySync: () => void flushRef.current(),
+      localImport,
+      importLocal,
+      skipImport,
       data,
       activeHabits,
       addHabit,
@@ -197,7 +324,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
       routineName: (id) => data.routines.find((r) => r.id === id)?.name ?? "Anytime",
     };
-  }, [data, ready, addHabit, addHabits, updateHabit, deleteHabit, toggle, checkInGoal, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
+  }, [data, ready, loadError, syncStatus, localImport, importLocal, skipImport, addHabit, addHabits, updateHabit, deleteHabit, toggle, checkInGoal, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

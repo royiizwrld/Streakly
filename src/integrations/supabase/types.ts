@@ -14,6 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
+      habit_categories: {
+        Row: {
+          built_in: boolean
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          built_in?: boolean
+          created_at?: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          built_in?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_celebrations: {
+        Row: {
+          created_at: string
+          day: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_goals: {
+        Row: {
+          created_at: string
+          habit_id: string
+          id: string
+          mode: string
+          name: string
+          start_date: string
+          target_days: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          id: string
+          mode?: string
+          name: string
+          start_date: string
+          target_days: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          id?: string
+          mode?: string
+          name?: string
+          start_date?: string
+          target_days?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_logs: {
+        Row: {
+          created_at: string
+          day: string
+          habit_id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          habit_id: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          habit_id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_routines: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habits: {
+        Row: {
+          archived: boolean
+          category_id: string
+          color: string
+          created_at: string
+          created_on: string
+          frequency: Json
+          icon: string
+          id: string
+          name: string
+          reminder: string | null
+          routine_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category_id?: string
+          color: string
+          created_at?: string
+          created_on?: string
+          frequency?: Json
+          icon: string
+          id: string
+          name: string
+          reminder?: string | null
+          routine_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          category_id?: string
+          color?: string
+          created_at?: string
+          created_on?: string
+          frequency?: Json
+          icon?: string
+          id?: string
+          name?: string
+          reminder?: string | null
+          routine_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

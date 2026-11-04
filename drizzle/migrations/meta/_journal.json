@@ -8,6 +8,13 @@
       "when": 1792999639837,
       "tag": "0000_create_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793805625599,
+      "tag": "0001_cloud_habit_data",
+      "breakpoints": true
     }
   ]
 }
