@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FrequencyPicker, IconPicker } from "./pickers";
+import { authFetch } from "@/lib/auth/auth-fetch";
 
 interface Row {
   key: string;
@@ -63,7 +64,7 @@ export function BulkAddDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/bulk-habits", {
+      const res = await authFetch("/api/bulk-habits", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ text }),

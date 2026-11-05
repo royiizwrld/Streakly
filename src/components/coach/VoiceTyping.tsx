@@ -3,6 +3,7 @@ import { Loader2, Mic, Square, X } from "lucide-react";
 import { createParser } from "eventsource-parser";
 import { Button } from "@/components/ui/button";
 import { recordWav } from "@/lib/voice/record-wav";
+import { authFetch } from "@/lib/auth/auth-fetch";
 
 export function VoiceTyping({
   disabled,
@@ -60,7 +61,7 @@ export function VoiceTyping({
       const file = await recording.stop();
       const form = new FormData();
       form.append("file", file);
-      const response = await fetch("/api/transcribe", {
+      const response = await authFetch("/api/transcribe", {
         method: "POST",
         body: form,
         signal: abort.signal,

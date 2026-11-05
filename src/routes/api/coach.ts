@@ -3,6 +3,9 @@ import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage }
 import { z } from "zod";
 import { createGateway, describeAiError, reasoningOptions } from "@/lib/ai/provider.server";
 import { withLovableAiGatewayRunIdHeader } from "@/lib/ai/run-id";
+import { requireRequestUser, todayInZone } from "@/lib/auth/request-user.server";
+import { loadCloudData } from "@/lib/habits/cloud";
+import { buildCoachSummary } from "@/lib/habits/summary";
 
 const INSTRUCTIONS = `You are Sprout, a warm, practical habit coach inside a habit-tracking app.
 
@@ -42,15 +45,26 @@ export const Route = createFileRoute("/api/coach")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const auth = await requireRequestUser(request);
+        if (auth instanceof Response) return auth;
         let messages: UIMessage[];
-        let summary: unknown;
         try {
-          const body = (await request.json()) as { messages?: UIMessage[]; summary?: unknown };
+          const body = (await request.json()) as { messages?: UIMessage[] };
           if (!Array.isArray(body.messages)) throw new Error("bad");
           messages = body.messages.slice(-30);
-          summary = body.summary ?? {};
         } catch {
           return Response.json({ error: "Invalid request." }, { status: 400 });
+        }
+        // Read only this user's data (row-level security) and judge "today" in their time zone.
+        let summary: unknown;
+        try {
+          const [{ data }, profile] = await Promise.all([
+            loadCloudData(auth.supabase),
+            auth.supabase.from("profiles").select("timezone").eq("id", auth.userId).maybeSingle(),
+          ]);
+          summary = buildCoachSummary(data, todayInZone(profile.data?.timezone));
+        } catch {
+          return Response.json({ error: "Couldn't read your habit history. Please try again." }, { status: 503 });
         }
         const summaryJson = JSON.stringify(summary);
         if (summaryJson.length > 60000) return Response.json({ error: "Too much data to analyse at once." }, { status: 400 });

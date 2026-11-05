@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sprout, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useHabits } from "@/context/HabitsContext";
+import { authHeaders } from "@/lib/auth/auth-fetch";
 import { buildCoachSummary } from "@/lib/habits/summary";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,8 +46,6 @@ export function CoachMark({ className = "size-9" }: { className?: string }) {
 
 export default function CoachChat({ threadId }: { threadId: string }) {
   const { data } = useHabits();
-  const dataRef = useRef(data);
-  dataRef.current = data;
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -55,9 +54,8 @@ export default function CoachChat({ threadId }: { threadId: string }) {
     messages: getThreads().find((t) => t.id === threadId)?.messages ?? [],
     transport: new DefaultChatTransport({
       api: "/api/coach",
-      prepareSendMessagesRequest: ({ messages }) => ({
-        body: { messages, summary: buildCoachSummary(dataRef.current) },
-      }),
+      headers: authHeaders,
+      prepareSendMessagesRequest: ({ messages }) => ({ body: { messages } }),
     }),
     onError: (err) => {
       let msg = err.message;
