@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRequestUser } from "@/lib/auth/request-user.server";
 import { Output, streamText } from "ai";
 import { z } from "zod";
 import { createGateway, describeAiError, reasoningOptions } from "@/lib/ai/provider.server";
@@ -28,6 +29,8 @@ export const Route = createFileRoute("/api/bulk-habits")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const auth = await requireRequestUser(request);
+        if (auth instanceof Response) return auth;
         let text: string;
         try {
           const body = (await request.json()) as { text?: unknown };

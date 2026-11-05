@@ -7,6 +7,7 @@ import { useHabits } from "@/context/HabitsContext";
 import { buildCoachSummary } from "@/lib/habits/summary";
 import { Button } from "@/components/ui/button";
 import {
+import { authHeaders } from "@/lib/auth/auth-fetch";
   Conversation,
   ConversationContent,
   ConversationScrollButton,
@@ -55,9 +56,8 @@ export default function CoachChat({ threadId }: { threadId: string }) {
     messages: getThreads().find((t) => t.id === threadId)?.messages ?? [],
     transport: new DefaultChatTransport({
       api: "/api/coach",
-      prepareSendMessagesRequest: ({ messages }) => ({
-        body: { messages, summary: buildCoachSummary(dataRef.current) },
-      }),
+      headers: authHeaders,
+      prepareSendMessagesRequest: ({ messages }) => ({ body: { messages } }),
     }),
     onError: (err) => {
       let msg = err.message;

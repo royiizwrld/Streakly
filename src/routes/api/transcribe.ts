@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRequestUser } from "@/lib/auth/request-user.server";
 
 const MAX_BODY = 25 * 1024 * 1024;
 export const Route = createFileRoute("/api/transcribe")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const auth = await requireRequestUser(request);
+        if (auth instanceof Response) return auth;
         try {
           if (!request.headers.get("content-type")?.startsWith("multipart/form-data"))
             return Response.json({ error: "An audio recording is required." }, { status: 400 });
