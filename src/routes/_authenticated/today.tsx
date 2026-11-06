@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, PartyPopper, Plus } from "lucide-react";
 import { useHabits } from "@/context/HabitsContext";
+import { useAuth } from "@/context/AuthContext";
 import { addDays, formatLong, todayKey } from "@/lib/habits/dates";
 import { HabitRow } from "@/components/habit/HabitRow";
 import { HabitFormDialog } from "@/components/habit/HabitFormDialog";
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function ProgressRing({ pct }: { pct: number }) {
+  const { profile } = useAuth();
   const r = 34;
   const c = 2 * Math.PI * r;
   return (
@@ -98,7 +100,7 @@ function Today() {
     return [...map.entries()].filter(([, g]) => g.items.length);
   }, [visible, view, h.data.routines, h.data.categories]);
 
-  if (!h.ready) return <div className="h-64 animate-pulse rounded-3xl bg-muted" />;
+  if (!h.ready) return <div className="h-64 animate-pulse rounded-3xl bg-muted" aria-label="Loading your habits" />;
 
   const pct = progress.pct ?? 0;
   return (
@@ -115,7 +117,7 @@ function Today() {
             <ChevronLeft />
           </Button>
           <div className="flex-1 text-center">
-            <p className="text-sm font-medium opacity-85">{day === today ? "Today" : day === addDays(today, -1) ? "Yesterday" : "Editing past day"}</p>
+            <p className="text-sm font-medium opacity-85">{day === today ? (profile?.first_name ? `Hi ${profile.first_name} · Today` : "Today") : day === addDays(today, -1) ? "Yesterday" : "Editing past day"}</p>
             <h1 className="font-display text-xl font-bold sm:text-2xl">{formatLong(day)}</h1>
           </div>
           <Button
