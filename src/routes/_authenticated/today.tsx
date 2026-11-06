@@ -30,7 +30,6 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function ProgressRing({ pct }: { pct: number }) {
-  const { profile } = useAuth();
   const r = 34;
   const c = 2 * Math.PI * r;
   return (
@@ -52,6 +51,7 @@ function ProgressRing({ pct }: { pct: number }) {
 }
 
 function Today() {
+  const { profile } = useAuth();
   const h = useHabits();
   const today = todayKey();
   const [day, setDay] = useState(today);
@@ -192,11 +192,11 @@ function Today() {
 
       {h.activeHabits.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border p-10 text-center">
-          <p className="font-display text-xl font-bold">Start your first habit</p>
+          <p className="font-display text-xl font-bold">Welcome! Let's build your first habit</p>
           <p className="mt-1 text-sm text-muted-foreground">Add one by hand or paste your whole routine.</p>
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Button onClick={() => setFormOpen(true)}>
-              <Plus /> Add habit
+              <Plus /> Create your first habit
             </Button>
             <Button variant="secondary" asChild>
               <Link to="/habits" search={{ bulk: true }}>
