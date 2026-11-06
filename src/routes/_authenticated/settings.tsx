@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { removeStored } from "@/lib/browser-storage";
 import { clearThreads } from "@/lib/coach-history";
+import { AccountSections, ProfileHeader } from "@/components/settings/AccountSection";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -43,6 +44,7 @@ function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-3xl font-extrabold">Settings</h1>
+      <ProfileHeader />
 
       <Section title="Appearance">
         <div className="grid grid-cols-3 gap-2">
@@ -146,21 +148,11 @@ function SettingsPage() {
       </Section>
 
       <Section title="Data">
-        <p className="text-sm text-muted-foreground">Everything is stored in this browser.</p>
+        <p className="text-sm text-muted-foreground">Your habits and history are saved to your account and sync across your devices.</p>
         <div className="flex flex-wrap gap-2">
-          {hasSample ? (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                h.clearSample();
-                toast.success("Sample data cleared");
-              }}
-            >
+          {hasSample && (
+            <Button variant="secondary" onClick={() => { h.clearSample(); toast.success("Sample data cleared"); }}>
               <Trash2 /> Clear sample data
-            </Button>
-          ) : (
-            <Button variant="secondary" onClick={() => h.loadSample()}>
-              Load sample data
             </Button>
           )}
           <Button
@@ -179,6 +171,8 @@ function SettingsPage() {
           </Button>
         </div>
       </Section>
+
+      <AccountSections />
     </div>
   );
 }

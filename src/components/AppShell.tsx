@@ -4,6 +4,8 @@ import { BarChart3, CalendarDays, CheckCircle2, ListTodo, Moon, Settings, Sun, T
 import { useTheme } from "@/context/ThemeContext";
 import { CoachPanel } from "@/components/coach/CoachPanel";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { SavingDot, SyncNotice } from "@/components/AppStatus";
 
 const NAV = [
   { to: "/today", label: "Today", icon: CheckCircle2 },
@@ -16,6 +18,7 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { resolved, setMode } = useTheme();
+  const { profile } = useAuth();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur">
@@ -36,10 +39,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <SavingDot />
+            {profile?.first_name && <span className="hidden text-sm text-muted-foreground sm:inline">Hi, {profile.first_name}</span>}
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            className="ml-auto rounded-full"
+            className="rounded-full"
             aria-label={resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             onClick={() => setMode(resolved === "dark" ? "light" : "dark")}
           >
@@ -48,7 +55,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pb-32 pt-6 md:pb-16">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 pb-6 pt-6">
+        <SyncNotice />
+        {children}
+      </main>
+      <footer className="mx-auto max-w-5xl px-4 pb-32 pt-4 text-center text-xs text-muted-foreground md:pb-10">
+        <Link to="/terms" className="hover:text-foreground">Terms</Link>
+        <span aria-hidden> · </span>
+        <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+      </footer>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-6">

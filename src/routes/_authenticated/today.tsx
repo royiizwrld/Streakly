@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, PartyPopper, Plus } from "lucide-react";
 import { useHabits } from "@/context/HabitsContext";
+import { useAuth } from "@/context/AuthContext";
 import { addDays, formatLong, todayKey } from "@/lib/habits/dates";
 import { HabitRow } from "@/components/habit/HabitRow";
 import { HabitFormDialog } from "@/components/habit/HabitFormDialog";
@@ -50,6 +51,7 @@ function ProgressRing({ pct }: { pct: number }) {
 }
 
 function Today() {
+  const { profile } = useAuth();
   const h = useHabits();
   const today = todayKey();
   const [day, setDay] = useState(today);
@@ -98,7 +100,7 @@ function Today() {
     return [...map.entries()].filter(([, g]) => g.items.length);
   }, [visible, view, h.data.routines, h.data.categories]);
 
-  if (!h.ready) return <div className="h-64 animate-pulse rounded-3xl bg-muted" />;
+  if (!h.ready) return <div className="h-64 animate-pulse rounded-3xl bg-muted" aria-label="Loading your habits" />;
 
   const pct = progress.pct ?? 0;
   return (
@@ -115,7 +117,7 @@ function Today() {
             <ChevronLeft />
           </Button>
           <div className="flex-1 text-center">
-            <p className="text-sm font-medium opacity-85">{day === today ? "Today" : day === addDays(today, -1) ? "Yesterday" : "Editing past day"}</p>
+            <p className="text-sm font-medium opacity-85">{day === today ? (profile?.first_name ? `Hi ${profile.first_name} · Today` : "Today") : day === addDays(today, -1) ? "Yesterday" : "Editing past day"}</p>
             <h1 className="font-display text-xl font-bold sm:text-2xl">{formatLong(day)}</h1>
           </div>
           <Button
@@ -190,11 +192,11 @@ function Today() {
 
       {h.activeHabits.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border p-10 text-center">
-          <p className="font-display text-xl font-bold">Start your first habit</p>
+          <p className="font-display text-xl font-bold">Welcome! Let's build your first habit</p>
           <p className="mt-1 text-sm text-muted-foreground">Add one by hand or paste your whole routine.</p>
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Button onClick={() => setFormOpen(true)}>
-              <Plus /> Add habit
+              <Plus /> Create your first habit
             </Button>
             <Button variant="secondary" asChild>
               <Link to="/habits" search={{ bulk: true }}>
