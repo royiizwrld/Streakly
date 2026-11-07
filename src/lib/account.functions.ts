@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /** Permanently deletes the signed-in user's habit data and account. */
 export const deleteMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { confirm: string }) => input)
+  .validator((input: { confirm: string }) => input)
   .handler(async ({ data, context }) => {
     if (data.confirm !== "DELETE") throw new Error("Type DELETE to confirm.");
     const { supabase, userId } = context;

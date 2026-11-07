@@ -71,12 +71,13 @@ export function ProfilePrefsSync() {
     const p = PALETTES.find((x) => x.id === profile.palette);
     if (p) setPalette(p.id);
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz && tz !== profile.timezone) void supabase.from("profiles").update({ timezone: tz }).eq("id", user.id);
+    if (tz && tz !== profile.timezone) // Query builders are lazy; .then() sends the request.
+      void supabase.from("profiles").update({ timezone: tz }).eq("id", user.id).then(() => {});
   }, [user, profile, setMode, setPalette]);
 
   useEffect(() => {
     if (!user || applied.current !== user.id) return;
-    const t = setTimeout(() => void supabase.from("profiles").update({ theme: mode, palette }).eq("id", user.id), 400);
+    const t = setTimeout(() => void supabase.from("profiles").update({ theme: mode, palette }).eq("id", user.id).then(() => {}), 400);
     return () => clearTimeout(t);
   }, [mode, palette, user]);
 
