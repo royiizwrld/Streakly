@@ -17,3 +17,6 @@
 - Coach conversations use guarded browser storage with route-derived thread IDs and lazily mounted chat windows to retain history without slowing the app shell.
 - Voice typing records complete WAV audio and streams transcription through a server route; dictated text stays in the composer until explicitly sent.
 - Mark demonstration log entries with provenance; coach summaries filter these entries, use the user's local date, and are rebuilt for every message to avoid treating seeded or stale data as personal history.
+- Habit data lives in per-user cloud tables; the habit context keeps an in-memory copy and pushes snapshot diffs (debounced) so updates feel instant and failed saves can retry without losing changes.
+- App API routes verify the caller's bearer token and query as that user, so row-level security limits every AI request to the caller's own data.
+- The service worker is registered only from the guarded PWA wrapper (production, non-preview, non-iframe) and caches static assets only; pages fall back to the offline page.
