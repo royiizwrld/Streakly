@@ -9,8 +9,13 @@ export const Route = createFileRoute("/_authenticated")({
   // Session lives in localStorage, which SSR cannot read — gate on the client.
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
+    const { data, error } = await supabase.auth.getUser();
+    let user = data.user;
+    // Offline the server can't confirm the session; trust the one saved on this device.
+    if (!user && (navigator.onLine === false || error?.name === "AuthRetryableFetchError")) {
+      user = (await supabase.auth.getSession()).data.session?.user ?? null;
+    }
+    if (!user) {
       throw redirect({ to: "/login", search: { redirect: location.href } });
     }
   },

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearOfflineState } from "@/lib/habits/offline";
 
 export interface Profile {
   first_name: string;
@@ -62,8 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, loadProfile]);
 
   const signOut = useCallback(async () => {
+    // Don't leave this account's habits on a shared device after signing out.
+    if (session?.user) clearOfflineState(session.user.id);
     await supabase.auth.signOut();
-  }, []);
+  }, [session]);
 
   return (
     <Ctx.Provider
