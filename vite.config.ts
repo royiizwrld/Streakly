@@ -19,17 +19,23 @@ export default defineConfig({
         manifest: false,
         filename: "sw.js",
         workbox: {
-          // Static assets only. API, auth, database and AI calls are never cached.
+          // App shell and static assets only. API, auth, database and AI calls are never cached.
           globPatterns: ["**/*.{js,css,ico,png,svg,woff2,webmanifest}", "offline.html"],
           navigateFallback: null,
           cleanupOutdatedCaches: true,
           runtimeCaching: [
             {
-              // Pages always come from the network; offline shows the friendly fallback page.
+              // Pages: network first so deploys show up; the last copy opens the app offline.
               urlPattern: ({ request, url }) =>
                 request.mode === "navigate" && !url.pathname.startsWith("/~oauth") && !url.pathname.startsWith("/api/"),
-              handler: "NetworkOnly",
-              options: { precacheFallback: { fallbackURL: "/offline.html" } },
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "app-pages",
+                networkTimeoutSeconds: 4,
+                expiration: { maxEntries: 30 },
+                cacheableResponse: { statuses: [200] },
+                precacheFallback: { fallbackURL: "/offline.html" },
+              },
             },
           ],
         },

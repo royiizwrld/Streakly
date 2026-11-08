@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { CloudOff, Loader2, RefreshCw } from "lucide-react";
+import { CloudOff, Loader2, RefreshCw, WifiOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useHabits } from "@/context/HabitsContext";
@@ -23,20 +23,34 @@ export function DataGate({ children }: { children: ReactNode }) {
 
 export function SyncNotice() {
   const h = useHabits();
-  if (h.syncStatus !== "error") return null;
+  if (h.syncStatus !== "error" || !h.online) return null;
   return (
     <div role="status" className="mb-4 flex items-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
       <CloudOff className="size-5 shrink-0 text-destructive" aria-hidden />
-      <span className="flex-1">Some changes haven't been saved yet. They're kept on this device.</span>
+      <span className="flex-1">Some changes haven't been saved yet. They're kept on this device and will retry automatically.</span>
       <Button size="sm" variant="outline" onClick={h.retrySync}>Retry</Button>
     </div>
   );
 }
 
+/** Small header pill: offline with pending count, or syncing. */
 export function SavingDot() {
   const h = useHabits();
+  const n = h.pendingCount;
+  if (!h.online)
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+        <WifiOff className="size-3.5" aria-hidden />
+        Offline{n > 0 ? ` (${n} change${n === 1 ? "" : "s"} pending)` : ""}
+      </span>
+    );
   if (h.syncStatus !== "saving") return null;
-  return <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Saving" />;
+  return (
+    <span role="status" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <Loader2 className="size-4 animate-spin" aria-hidden />
+      <span className="sr-only sm:not-sr-only">Syncing{n > 1 ? ` ${n}` : ""}…</span>
+    </span>
+  );
 }
 
 export function ImportPrompt() {
