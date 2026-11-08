@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { computeDiff, diffIsEmpty, loadCloudData, pushDiff } from "@/lib/habits/cloud";
+import { computeDiff, diffIsEmpty, loadCloudData } from "@/lib/habits/cloud";
+import { diffToOutbox, readCache, readOutbox, replayOutbox, writeCache, writeOutbox, type OutboxItem } from "@/lib/habits/offline";
 import type { Category, Goal, Habit, HabitData, Routine, StreakInfo } from "@/lib/habits/types";
 import { emptyData, sampleData, uid } from "@/lib/habits/seed";
 import { computeStreak, completionRate, dayProgress, isDone, isDue } from "@/lib/habits/logic";
@@ -17,6 +18,9 @@ interface HabitsContextValue {
   loadError: string | null;
   reload: () => void;
   syncStatus: SyncStatus;
+  /** Changes saved on this device that the database hasn't confirmed yet. */
+  pendingCount: number;
+  online: boolean;
   retrySync: () => void;
   /** Habits found in this browser from before accounts existed, awaiting an import decision. */
   localImport: HabitData | null;
@@ -63,92 +67,168 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadNonce, setLoadNonce] = useState(0);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [pendingCount, setPendingCount] = useState(0);
+  const [online, setOnline] = useState(true);
   const [localImport, setLocalImport] = useState<HabitData | null>(null);
   const dataRef = useRef(data);
   dataRef.current = data;
-  const snapshot = useRef<HabitData | null>(null);
-  const flushing = useRef(false);
-  const dirty = useRef(false);
+  /** State already converted into outbox items; later edits are diffed against it. */
+  const base = useRef<HabitData | null>(null);
+  const outbox = useRef<OutboxItem[]>([]);
+  const replaying = useRef(false);
+  const again = useRef(false);
+  /** Set when changes had to wait (offline or a failed write), so we announce when they finally sync. */
+  const waited = useRef(false);
+  const syncedSinceWait = useRef(0);
+  const editVersion = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load this account's data from the cloud.
-  useEffect(() => {
-    if (!userId) return;
-    let active = true;
-    setReady(false);
-    setLoadError(null);
-    snapshot.current = null;
-    loadCloudData(supabase)
-      .then(({ data: loaded, snapshot: snap }) => {
-        if (!active) return;
-        snapshot.current = snap;
-        setData(loaded);
-        setReady(true);
-        const raw = readStored(HABITS_STORAGE_KEY);
-        const local = raw ? parseHabitData(raw) : null;
-        const hasReal = local?.habits.some((h) => !h.sample);
-        if (local && hasReal && readStored(`ht-import-skipped-${userId}`) !== "1") setLocalImport(local);
-      })
-      .catch(() => {
-        if (active) setLoadError("We couldn't load your habits. Check your connection and try again.");
-      });
-    return () => {
-      active = false;
-    };
-  }, [userId, loadNonce]);
+  const persistOutbox = useCallback((items: OutboxItem[]) => {
+    outbox.current = items;
+    if (userId) writeOutbox(userId, items);
+    setPendingCount(items.length);
+  }, [userId]);
 
-  const flush = useCallback(async () => {
-    if (!userId || !snapshot.current) return;
-    if (flushing.current) {
-      dirty.current = true;
-      return;
-    }
-    flushing.current = true;
+  const persistCache = useCallback(() => {
+    if (userId && base.current) writeCache(userId, { data: dataRef.current, base: base.current });
+  }, [userId]);
+
+  /** Moves any unqueued edits into the outbox and saves the local snapshot. */
+  const enqueue = useCallback(() => {
+    if (!userId || !base.current) return;
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     const target = dataRef.current;
-    const diff = computeDiff(snapshot.current, target);
-    if (diffIsEmpty(diff)) {
-      flushing.current = false;
+    const diff = computeDiff(base.current, target);
+    if (!diffIsEmpty(diff)) {
+      editVersion.current += 1;
+      persistOutbox([...outbox.current, ...diffToOutbox(userId, diff)]);
+      base.current = structuredClone(target);
+    }
+    persistCache();
+  }, [userId, persistOutbox, persistCache]);
+
+  const replay = useCallback(async () => {
+    if (!userId || !base.current) return;
+    if (replaying.current) { again.current = true; return; }
+    if (!outbox.current.length) { setSyncStatus("idle"); return; }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      waited.current = true;
       setSyncStatus("idle");
       return;
     }
+    replaying.current = true;
     setSyncStatus("saving");
     try {
-      await pushDiff(supabase, userId, diff);
-      snapshot.current = structuredClone(target);
-      setSyncStatus("idle");
-    } catch {
-      setSyncStatus((prev) => {
-        if (prev !== "error") toast.error("Couldn't save your latest changes", { description: "They're kept on this device. We'll retry when you're back online.", action: { label: "Retry", onClick: () => void flushRef.current() } });
-        return "error";
-      });
-    } finally {
-      flushing.current = false;
-      if (dirty.current) {
-        dirty.current = false;
-        void flushRef.current();
+      const res = await replayOutbox(supabase, outbox.current, persistOutbox);
+      syncedSinceWait.current += res.synced;
+      if (res.dropped.length) {
+        const n = res.dropped.length;
+        toast.warning(`${n} change${n === 1 ? "" : "s"} couldn't be saved`, {
+          description: "It referred to something that no longer exists, so it was skipped. Everything else is saving normally.",
+        });
       }
+      if (res.blocked) {
+        waited.current = true;
+        setSyncStatus(navigator.onLine === false ? "idle" : "error");
+      } else {
+        if (waited.current && syncedSinceWait.current > 0) {
+          const n = syncedSinceWait.current;
+          toast.success(`Synced ${n} change${n === 1 ? "" : "s"}`);
+        }
+        waited.current = false;
+        syncedSinceWait.current = 0;
+        setSyncStatus("idle");
+      }
+    } finally {
+      replaying.current = false;
+      if (again.current) { again.current = false; void replayRef.current(); }
     }
-  }, [userId]);
-  const flushRef = useRef(flush);
-  flushRef.current = flush;
+  }, [userId, persistOutbox]);
+  const replayRef = useRef(replay);
+  replayRef.current = replay;
 
-  // Optimistic: the UI already shows the change; save it shortly after.
+  /** Fetch the latest from the database when nothing local is waiting, and refresh the cache. */
+  const refreshFromCloud = useCallback(async (hadCache: boolean) => {
+    if (!userId) return;
+    await replayRef.current();
+    if (outbox.current.length) return; // local edits win until they're saved
+    const version = editVersion.current;
+    try {
+      const { data: loaded, snapshot: snap } = await loadCloudData(supabase);
+      if (version !== editVersion.current || outbox.current.length) return; // user edited meanwhile
+      // Keep unsynced sample habits that exist only on this device.
+      const samples = dataRef.current.habits.filter((h) => h.sample);
+      const merged = samples.length && !loaded.habits.length
+        ? { ...loaded, habits: [...loaded.habits, ...samples], logs: { ...loaded.logs, ...Object.fromEntries(samples.map((h) => [h.id, dataRef.current.logs[h.id] ?? {}])) }, sampleLoaded: dataRef.current.sampleLoaded }
+        : loaded;
+      base.current = { ...snap, habits: [...snap.habits, ...(merged === loaded ? [] : samples)], logs: merged.logs };
+      // Base mirrors merged so samples never look like new edits; computeDiff ignores samples anyway.
+      base.current = structuredClone({ ...merged, categories: snap.categories, routines: snap.routines });
+      dataRef.current = merged;
+      setData(merged);
+      setReady(true);
+      setLoadError(null);
+      persistCache();
+      const raw = readStored(HABITS_STORAGE_KEY);
+      const local = raw ? parseHabitData(raw) : null;
+      if (local?.habits.some((h) => !h.sample) && readStored(`ht-import-skipped-${userId}`) !== "1") setLocalImport(local);
+    } catch {
+      if (!hadCache) setLoadError("We couldn't load your habits. Check your connection and try again.");
+    }
+  }, [userId, persistCache]);
+
+  // Open instantly from this device's copy, then refresh quietly in the background.
+  useEffect(() => {
+    if (!userId) return;
+    setLoadError(null);
+    const cached = readCache(userId);
+    outbox.current = readOutbox(userId);
+    setPendingCount(outbox.current.length);
+    if (outbox.current.length) waited.current = true;
+    if (cached) {
+      base.current = cached.base;
+      dataRef.current = cached.data;
+      setData(cached.data);
+      setReady(true);
+      // Edits made after the last enqueue but before closing are captured here.
+      enqueue();
+    } else {
+      base.current = null;
+      setReady(false);
+    }
+    if (!cached && typeof navigator !== "undefined" && navigator.onLine === false) {
+      setLoadError("You're offline and this device has no saved copy yet. Connect once to load your habits.");
+      return;
+    }
+    void refreshFromCloud(!!cached);
+  }, [userId, loadNonce, enqueue, refreshFromCloud]);
+
+  // Optimistic: the UI already shows the change; queue and send it shortly after.
   useEffect(() => {
     if (!ready) return;
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => void flushRef.current(), 300);
-  }, [data, ready]);
+    timer.current = setTimeout(() => { enqueue(); void replayRef.current(); }, 300);
+  }, [data, ready, enqueue]);
 
   useEffect(() => {
-    const retry = () => void flushRef.current();
-    window.addEventListener("online", retry);
-    const flushOnHide = () => { if (document.visibilityState === "hidden") retry(); };
-    document.addEventListener("visibilitychange", flushOnHide);
-    return () => {
-      window.removeEventListener("online", retry);
-      document.removeEventListener("visibilitychange", flushOnHide);
+    setOnline(navigator.onLine !== false);
+    const goOnline = () => { setOnline(true); void refreshFromCloud(true); };
+    const goOffline = () => { setOnline(false); waited.current = true; };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") enqueue();
+      else void replayRef.current();
     };
-  }, []);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("pagehide", enqueue);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("pagehide", enqueue);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [enqueue, refreshFromCloud]);
 
   const importLocal = useCallback(() => {
     const local = localImport;
@@ -293,7 +373,9 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       loadError,
       reload: () => setLoadNonce((n) => n + 1),
       syncStatus,
-      retrySync: () => void flushRef.current(),
+      pendingCount,
+      online,
+      retrySync: () => void replayRef.current(),
       localImport,
       importLocal,
       skipImport,
@@ -324,7 +406,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       categoryName: (id) => data.categories.find((c) => c.id === id)?.name ?? "Other",
       routineName: (id) => data.routines.find((r) => r.id === id)?.name ?? "Anytime",
     };
-  }, [data, ready, loadError, syncStatus, localImport, importLocal, skipImport, addHabit, addHabits, updateHabit, deleteHabit, toggle, checkInGoal, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
+  }, [data, ready, loadError, syncStatus, pendingCount, online, localImport, importLocal, skipImport, addHabit, addHabits, updateHabit, deleteHabit, toggle, checkInGoal, setNote, addCategory, deleteCategory, addRoutine, deleteRoutine, markCelebrated, clearSample, loadSample, resetAll, addGoal, updateGoal, deleteGoal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
