@@ -161,7 +161,6 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       const merged = samples.length && !loaded.habits.length
         ? { ...loaded, habits: [...loaded.habits, ...samples], logs: { ...loaded.logs, ...Object.fromEntries(samples.map((h) => [h.id, dataRef.current.logs[h.id] ?? {}])) }, sampleLoaded: dataRef.current.sampleLoaded }
         : loaded;
-      base.current = { ...snap, habits: [...snap.habits, ...(merged === loaded ? [] : samples)], logs: merged.logs };
       // Base mirrors merged so samples never look like new edits; computeDiff ignores samples anyway.
       base.current = structuredClone({ ...merged, categories: snap.categories, routines: snap.routines });
       dataRef.current = merged;
