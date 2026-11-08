@@ -10,8 +10,11 @@ vi.mock("@/lib/habits/cloud", async (orig) => {
   return {
     ...real,
     loadCloudData: async () => ({ data: structuredClone(cloud.initial!), snapshot: structuredClone(cloud.initial!) }),
-    pushDiff: async (_sb: unknown, _u: string, d: unknown) => { cloud.pushed.push(d); },
   };
+});
+vi.mock("@/lib/habits/offline", async (orig) => {
+  const real = await orig<typeof import("@/lib/habits/offline")>();
+  return { ...real, execOp: async (_sb: unknown, op: unknown) => { cloud.pushed.push(op); } };
 });
 import { HabitsProvider, useHabits } from "@/context/HabitsContext";
 import { goalProgress } from "@/lib/habits/goals";
@@ -81,6 +84,6 @@ describe("Goal completion", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check in 30 days of daily reading" }));
     expect(screen.getByTestId("progress")).toHaveTextContent("1");
     await waitFor(() => expect(cloud.pushed.length).toBe(1), { timeout: 2000 });
-    expect((cloud.pushed[0] as { logsUpsert: unknown[] }).logsUpsert).toEqual([{ habit_id: "r", day: todayKey(), note: null }]);
+    expect(cloud.pushed[0]).toEqual({ kind: "upsert", table: "habit_logs", rows: [{ user_id: "u1", habit_id: "r", day: todayKey(), note: null }] });
   });
 });
