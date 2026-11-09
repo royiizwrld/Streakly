@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { computeDiff, diffIsEmpty, loadCloudData } from "@/lib/habits/cloud";
-import { diffToOutbox, readCache, readOutbox, replayOutbox, writeCache, writeOutbox, type OutboxItem } from "@/lib/habits/offline";
+import { diffToOutbox, execOp, readCache, readOutbox, replayOutbox, writeCache, writeOutbox, type OutboxItem } from "@/lib/habits/offline";
 import type { Category, Goal, Habit, HabitData, Routine, StreakInfo } from "@/lib/habits/types";
 import { emptyData, sampleData, uid } from "@/lib/habits/seed";
 import { computeStreak, completionRate, dayProgress, isDone, isDue } from "@/lib/habits/logic";
@@ -119,7 +119,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     replaying.current = true;
     setSyncStatus("saving");
     try {
-      const res = await replayOutbox(supabase, outbox.current, persistOutbox);
+      const res = await replayOutbox(supabase, outbox.current, persistOutbox, (op) => execOp(supabase, op));
       syncedSinceWait.current += res.synced;
       if (res.dropped.length) {
         const n = res.dropped.length;
