@@ -24,7 +24,7 @@ describe("offline outbox", () => {
     const res = await replayOutbox({} as never, items(3), () => {}, async (op) => { seen.push(op); });
     expect(res.synced).toBe(3);
     expect(res.remaining).toEqual([]);
-    expect(seen.map((o) => (o as { rows: { i: number }[] }).rows[0].i)).toEqual([0, 1, 2]);
+    expect(seen.map((o) => (o as unknown as { rows: { i: number }[] }).rows[0].i)).toEqual([0, 1, 2]);
   });
 
   it("keeps the failed item and everything after it when offline, adding a retry count", async () => {
