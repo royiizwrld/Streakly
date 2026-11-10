@@ -6,6 +6,7 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TryDemoButton } from "@/components/demo/Demo";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -107,6 +108,7 @@ function LoginPage() {
           Create an account
         </Link>
       </p>
+      <TryDemoButton />
     </AuthLayout>
   );
 }
