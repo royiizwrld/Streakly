@@ -201,6 +201,7 @@ function SignupPage() {
           Sign in
         </Link>
       </p>
+      <TryDemoButton />
     </AuthLayout>
   );
 }

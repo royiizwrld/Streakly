@@ -6,6 +6,7 @@ import { computeDiff, diffIsEmpty, loadCloudData } from "@/lib/habits/cloud";
 import { diffToOutbox, execOp, readCache, readOutbox, replayOutbox, writeCache, writeOutbox, type OutboxItem } from "@/lib/habits/offline";
 import type { Category, Goal, Habit, HabitData, Routine, StreakInfo } from "@/lib/habits/types";
 import { emptyData, sampleData, uid } from "@/lib/habits/seed";
+import { demoData, isDemoMode } from "@/lib/demo";
 import { computeStreak, completionRate, dayProgress, isDone, isDue } from "@/lib/habits/logic";
 import { todayKey } from "@/lib/habits/dates";
 import { readStored, removeStored, writeStored } from "@/lib/browser-storage";
@@ -175,6 +176,15 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       if (!hadCache) setLoadError("We couldn't load your habits. Check your connection and try again.");
     }
   }, [userId, persistCache]);
+
+  // Demo mode: signed-out explorers get in-memory sample data that is never saved.
+  useEffect(() => {
+    if (userId || !isDemoMode()) return;
+    const demo = demoData();
+    dataRef.current = demo;
+    setData(demo);
+    setReady(true);
+  }, [userId]);
 
   // Open instantly from this device's copy, then refresh quietly in the background.
   useEffect(() => {

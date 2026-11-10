@@ -4,6 +4,7 @@ import { BarChart3, CalendarDays, CheckCircle2, ListTodo, Moon, Settings, Sun, T
 import { useTheme } from "@/context/ThemeContext";
 import { CoachPanel } from "@/components/coach/CoachPanel";
 import { Button } from "@/components/ui/button";
+import { DemoBanner } from "@/components/demo/Demo";
 import { useAuth } from "@/context/AuthContext";
 import { SavingDot, SyncNotice } from "@/components/AppStatus";
 
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <DemoBanner />
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-4 px-4">
           <Link to="/today" className="flex items-center gap-2 font-display text-lg font-extrabold">

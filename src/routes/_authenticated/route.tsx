@@ -4,6 +4,7 @@ import { HabitsProvider } from "@/context/HabitsContext";
 import { AppShell } from "@/components/AppShell";
 import { DataGate, ImportPrompt, ProfilePrefsSync } from "@/components/AppStatus";
 import { InstallBanner } from "@/components/pwa/InstallBanner";
+import { endDemoMode, isDemoMode } from "@/lib/demo";
 
 export const Route = createFileRoute("/_authenticated")({
   // Session lives in localStorage, which SSR cannot read — gate on the client.
@@ -15,7 +16,8 @@ export const Route = createFileRoute("/_authenticated")({
     if (!user && (navigator.onLine === false || error?.name === "AuthRetryableFetchError")) {
       user = (await supabase.auth.getSession()).data.session?.user ?? null;
     }
-    if (!user) {
+    if (user) endDemoMode();
+    if (!user && !isDemoMode()) {
       throw redirect({ to: "/login", search: { redirect: location.href } });
     }
   },
